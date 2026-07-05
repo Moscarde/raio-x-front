@@ -184,6 +184,11 @@ npm run format
 
 Se algum script ainda não existir, criar quando a necessidade aparecer.
 
+Há também um `justfile` com atalhos de setup e deploy (`just setup`,
+`just check`, `just docker-build`, `just deploy` etc.) — rode `just` sem
+argumentos para ver a lista completa. Ver comentários no próprio arquivo
+para os pré-requisitos de deploy (Docker, SSH no VPS).
+
 ## Banco de dados
 
 A conexão com PostgreSQL deve ficar centralizada em:
