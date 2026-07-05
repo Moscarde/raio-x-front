@@ -98,6 +98,16 @@ export function AppSidebar({
           </div>
         </div>
 
+        <div className="flex items-center gap-2.5 px-3 text-[10.5px] font-medium text-sidebar-foreground/55">
+          <Link href="/documentacao" className="hover:text-sidebar-foreground">
+            Documentação
+          </Link>
+          <span>·</span>
+          <Link href="/qualidade-dados" className="hover:text-sidebar-foreground">
+            Qualidade dos dados
+          </Link>
+        </div>
+
         <div className="flex items-center gap-2.5 px-1">
           <span className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-brand-secondary text-xs font-semibold text-white">
             {usuario.iniciais}
