@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { PageShell } from "@/components/layout/page-shell";
@@ -127,9 +128,17 @@ export default async function MunicipioVisaoGeralPage({ params }: PageProps) {
         </DashboardCard>
 
         <DashboardCard>
-          <span className="text-sm font-semibold text-text-primary">
-            Alertas priorizados
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-text-primary">
+              Alertas priorizados
+            </span>
+            <Link
+              href={`/municipios/${municipioId}/alertas`}
+              className="text-[11px] font-semibold text-brand-primary"
+            >
+              Ver todos
+            </Link>
+          </div>
           <AlertList
             alertas={[]}
             emptyMessage="Nenhuma regra de alerta implementada ainda para este município (ver notes/backlog.md)."
