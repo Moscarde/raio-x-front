@@ -113,6 +113,11 @@ Objetivo: primeira página completa do produto.
 para esta tela (tipada, camada de dados correta, sem dado sensível, estados
 tratados, segue a referência visual, testada onde há lógica).
 
+~~Fase 4~~ ✅ concluída em 2026-07-05 — `app/page.tsx` é uma escolha real
+entre os 3 municípios com dado carregado (`getMunicipiosDisponiveis`), não
+mais um redirect fixo. Sidebar já marcava item ativo real e badge de
+alertas real (0) desde a Fase 3.
+
 ## Fase 4 — Navegação real e seleção de município
 
 Objetivo: transformar as páginas isoladas em um produto navegável.
@@ -126,6 +131,13 @@ Objetivo: transformar as páginas isoladas em um produto navegável.
 **Pronto quando**: dá para abrir a aplicação, escolher um município e
 navegar pela sidebar sem página quebrada (os itens ainda sem tela podem
 apontar para um estado "em construção" temporário, não para 404).
+
+~~Fase 5~~ ✅ concluída em 2026-07-05, com uma mudança de escopo explícita:
+`app/comparador/page.tsx` compara os 3 municípios com dado real
+diretamente lado a lado, em vez de simular um "pareamento" por
+população/região/porte — o universo real de dados hoje é só esses 3
+municípios, então pareá-los não teria sentido. Ver `notes/backlog.md` para
+quando isso deixa de ser válido (mais municípios carregados no dbt).
 
 ## Fase 5 — Página Comparador
 
@@ -148,6 +160,11 @@ Comparador).
 **Pronto quando**: mesmo padrão de critérios de aceite da Fase 3, aplicado
 ao Comparador.
 
+~~Fase 6~~ ✅ concluída em 2026-07-05 — `app/municipios/[municipioId]/
+alertas/page.tsx` reaproveita `AlertList` com estado vazio honesto (nenhuma
+regra de alerta implementada ainda). Link "Ver todos" da Visão Geral já
+aponta para cá.
+
 ## Fase 6 — Alertas (lista completa)
 
 Objetivo: tela dedicada de alertas, reaproveitando o componente já validado
@@ -156,6 +173,16 @@ na Visão Geral.
 - `app/municipios/[municipioId]/alertas/page.tsx`.
 - Filtros por severidade/tipo.
 - Link "Ver todos" da Visão Geral passa a apontar para cá.
+
+~~Fase 7~~ ✅ concluída em 2026-07-05, com uma decisão explícita de exceção
+à ordem original: em vez de gerar uma nova rodada de mockup antes de
+codar, as telas foram construídas direto a partir de
+`reference/design-system.md` (já maduro e validado nas Fases 3/5/6) e do
+dado real disponível em `marts.*`. "Rede e CNES" e "Auditor CNES" foram
+tratados como a mesma tela (`rede-cnes`), por julgamento — não era uma
+pergunta que dependia do projeto de dados. Relatório IA ficou como
+placeholder informativo explicando a decisão de arquitetura pendente (não
+é a Fase 9 completa, que segue pendente).
 
 ## Fase 7 — Rodada de design para páginas pendentes
 
@@ -169,6 +196,13 @@ Rede e CNES, Atenção Primária (Radar APS), Produção, Relatório IA.
   na landing) são a mesma tela.
 - Implementar cada uma seguindo o mesmo ciclo das fases 2–3 (camada de dados
   → página → estados → testes), uma por vez.
+
+~~Fase 8~~ ✅ concluída em 2026-07-05 — `app/documentacao/page.tsx`
+(metodologia real por fonte: CNES, SIA, SIH, SISAB) e
+`app/qualidade-dados/page.tsx` (contagens reais via
+`lib/queries/qualidade-dados.ts`, exceto o total de
+`fct_producao_ambulatorial`, que usa estimativa de `pg_class.reltuples` —
+um `count(*)` exato mede ~58s). Ambas linkadas no rodapé da sidebar.
 
 ## Fase 8 — Documentação e qualidade de dados
 
@@ -202,6 +236,16 @@ Objetivo: avaliar se este repositório também hospeda a landing pública
 
 - Não iniciar sem essa decisão explícita — não faz parte do escopo de
   "dashboards municipais" descrito no `CLAUDE.md`.
+
+~~Fase 11~~ 🟡 parcialmente concluída em 2026-07-05 — o que já está feito:
+`tsc`/lint/`npm run test`/`npm run build` limpos em todo o app; revisão de
+segurança rápida (nenhuma credencial hardcoded, `.env.local` sempre
+gitignored, só dado agregado exibido); todas as 9 rotas verificadas no
+navegador sem erro de console. Falta: revisão de performance mais profunda
+das novas queries pesadas (Comparador dispara `getProducaoMensal` para os
+3 municípios em paralelo — cada uma cacheada separadamente, mas ainda vale
+medir o pior caso de cache frio) e cobertura de teste mais ampla conforme
+novas páginas amadurecerem.
 
 ## Fase 11 — Polimento e endurecimento
 
