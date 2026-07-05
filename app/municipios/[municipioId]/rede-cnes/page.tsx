@@ -1,0 +1,139 @@
+import { notFound } from "next/navigation";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { PageShell } from "@/components/layout/page-shell";
+import { DashboardHeader } from "@/components/layout/dashboard-header";
+import { ContentGrid } from "@/components/layout/content-grid";
+import { DashboardCard } from "@/components/layout/dashboard-card";
+import { KpiCard } from "@/components/cards/kpi-card";
+import { RedeInstaladaBars } from "@/components/charts/rede-instalada-bars";
+import { EstabelecimentosTable } from "@/components/tables/estabelecimentos-table";
+import { MunicipioSelect } from "@/components/filters/municipio-select";
+import { formatNumber } from "@/lib/formatters/number-format";
+import { parseMunicipioId } from "@/lib/validators/municipio-validator";
+import {
+  getMunicipioResumo,
+  getMunicipiosDisponiveis,
+} from "@/lib/queries/municipios";
+import {
+  getEstabelecimentosPorNaturezaJuridica,
+  getEstabelecimentosPorTipo,
+  getListaEstabelecimentos,
+  getResumoRede,
+} from "@/lib/queries/estabelecimentos";
+
+const LIMITE_TABELA = 100;
+
+type PageProps = {
+  params: Promise<{ municipioId: string }>;
+};
+
+export default async function RedeCnesPage({ params }: PageProps) {
+  const { municipioId: municipioIdParam } = await params;
+
+  let municipioId: number;
+  try {
+    municipioId = parseMunicipioId(municipioIdParam);
+  } catch {
+    notFound();
+  }
+
+  const [municipio, disponiveis] = await Promise.all([
+    getMunicipioResumo(municipioId),
+    getMunicipiosDisponiveis(),
+  ]);
+
+  if (!municipio) {
+    notFound();
+  }
+
+  const [resumoRede, porTipo, porNatureza, lista] = await Promise.all([
+    getResumoRede(municipioId),
+    getEstabelecimentosPorTipo(municipioId, 10),
+    getEstabelecimentosPorNaturezaJuridica(municipioId, 8),
+    getListaEstabelecimentos(municipioId, LIMITE_TABELA),
+  ]);
+
+  return (
+    <PageShell
+      sidebar={
+        <AppSidebar
+          municipioId={String(municipioId)}
+          alertCount={0}
+          atualizacoes={[{ fonte: "CNES", competencia: "dez/2025" }]}
+          usuario={{
+            nome: "M. Cardoso",
+            iniciais: "MC",
+            orgao: `SMS ${municipio.nomeMunicipio}`,
+          }}
+        />
+      }
+    >
+      <DashboardHeader
+        kicker="Rede e CNES"
+        title={municipio.nomeMunicipio}
+        subtitle={`${municipio.siglaUf} · ${municipio.nomeMicrorregiao} · competência dez/2025`}
+        actions={
+          <MunicipioSelect
+            municipios={disponiveis}
+            municipioSelecionadoId={municipioId}
+          />
+        }
+      />
+
+      <ContentGrid className="grid-cols-3">
+        <KpiCard
+          label="Estabelecimentos cadastrados"
+          value={formatNumber(resumoRede.totalEstabelecimentos)}
+        />
+        <KpiCard
+          label="Com vínculo SUS"
+          value={formatNumber(resumoRede.comVinculoSus)}
+        />
+        <KpiCard
+          label="Tipos de unidade distintos"
+          value={formatNumber(resumoRede.tiposDistintos)}
+        />
+      </ContentGrid>
+
+      <ContentGrid className="grid-cols-2">
+        <DashboardCard>
+          <span className="text-sm font-semibold text-text-primary">
+            Estabelecimentos por tipo
+          </span>
+          <RedeInstaladaBars itens={porTipo} />
+        </DashboardCard>
+
+        <DashboardCard>
+          <span className="text-sm font-semibold text-text-primary">
+            Estabelecimentos por natureza jurídica
+          </span>
+          <RedeInstaladaBars itens={porNatureza} />
+        </DashboardCard>
+      </ContentGrid>
+
+      <DashboardCard>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-text-primary">
+            Unidades cadastradas
+          </span>
+          <span className="text-[11px] text-text-secondary">
+            Exibindo {formatNumber(lista.length)} de{" "}
+            {formatNumber(resumoRede.totalEstabelecimentos)}
+          </span>
+        </div>
+        <EstabelecimentosTable estabelecimentos={lista} />
+      </DashboardCard>
+
+      <p className="text-[11px] text-text-secondary">
+        Fonte: CNES, competência única carregada (dezembro/2025) — sem série
+        histórica, não é possível ver abertura/fechamento de unidades ao
+        longo do tempo. Não há campo de situação (ativo/inativo) na mart,
+        nem nome do estabelecimento — só o código CNES.
+      </p>
+
+      <p className="text-center font-mono text-[10.5px] text-text-tertiary">
+        FONTES: CNES — DADOS REAIS (raio-x-engenharia)
+      </p>
+    </PageShell>
+  );
+}
