@@ -1,6 +1,10 @@
 import { query } from "@/lib/db/postgres";
 import { parseNumericColumn } from "@/lib/db/numeric";
-import type { IndicadorAps } from "@/types/indicador-aps";
+import type {
+  IndicadorAps,
+  IndicadorApsPorVisao,
+  VisaoEquipe,
+} from "@/types/indicador-aps";
 
 type IndicadorApsRow = {
   numero_indicador: number;
@@ -9,6 +13,15 @@ type IndicadorApsRow = {
   percentual_quadrimestre: string;
   populacao: string;
   quadrimestre: string;
+};
+
+type IndicadorApsPorVisaoRow = {
+  numero_indicador: number;
+  descricao_indicador: string;
+  visao_equipe: VisaoEquipe;
+  percentual: string;
+  numerador: string;
+  denominador_utilizador: string;
 };
 
 export function mapRowToIndicadorAps(row: IndicadorApsRow): IndicadorAps {
@@ -40,4 +53,35 @@ export async function getIndicadoresAps(
     [municipioId],
   );
   return rows.map(mapRowToIndicadorAps);
+}
+
+export function mapRowToIndicadorApsPorVisao(
+  row: IndicadorApsPorVisaoRow,
+): IndicadorApsPorVisao {
+  return {
+    numeroIndicador: row.numero_indicador,
+    descricaoIndicador: row.descricao_indicador,
+    visaoEquipe: row.visao_equipe,
+    percentual: parseNumericColumn(row.percentual),
+    numerador: parseNumericColumn(row.numerador),
+    denominadorUtilizador: parseNumericColumn(row.denominador_utilizador),
+  };
+}
+
+/**
+ * Traz as 3 visões de equipe (geral/homologadas/validas) por indicador,
+ * para a página de detalhe de Atenção Primária — a Visão Geral usa só
+ * "validas" (ver getIndicadoresAps).
+ */
+export async function getIndicadoresApsPorVisao(
+  municipioId: number,
+): Promise<IndicadorApsPorVisao[]> {
+  const rows = await query<IndicadorApsPorVisaoRow>(
+    `select numero_indicador, descricao_indicador, visao_equipe, percentual, numerador, denominador_utilizador
+     from marts.mart_indicadores_aps
+     where id_municipio = $1
+     order by numero_indicador, visao_equipe`,
+    [municipioId],
+  );
+  return rows.map(mapRowToIndicadorApsPorVisao);
 }
