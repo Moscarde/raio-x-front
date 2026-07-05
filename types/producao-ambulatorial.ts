@@ -4,3 +4,9 @@ export type ProducaoMensalPoint = {
   quantidadeAprovada: number;
   media12m: number;
 };
+
+export type ProducaoPorGrupo = {
+  grupoProcedimento: string;
+  quantidadeAprovada: number;
+  valorAprovado: number;
+};

@@ -2,9 +2,13 @@ import { unstable_cache } from "next/cache";
 import { query } from "@/lib/db/postgres";
 import { parseNumericColumn } from "@/lib/db/numeric";
 import { formatCompetencia } from "@/lib/formatters/competencia-format";
-import type { ProducaoMensalPoint } from "@/types/producao-ambulatorial";
+import type {
+  ProducaoMensalPoint,
+  ProducaoPorGrupo,
+} from "@/types/producao-ambulatorial";
 
 const MESES_JANELA = 12;
+const GRUPOS_JANELA = 10;
 
 type ProducaoMensalRow = {
   competencia_arquivo: string;
@@ -85,5 +89,51 @@ async function buscarProducaoMensal(
 export const getProducaoMensal = unstable_cache(
   buscarProducaoMensal,
   ["producao-mensal-por-municipio"],
+  { revalidate: 60 * 60 * 24 },
+);
+
+type ProducaoPorGrupoRow = {
+  grupo: string;
+  quantidade_aprovada: string;
+  valor_aprovado: string;
+};
+
+export function mapRowToProducaoPorGrupo(
+  row: ProducaoPorGrupoRow,
+): ProducaoPorGrupo {
+  return {
+    grupoProcedimento: row.grupo,
+    quantidadeAprovada: parseNumericColumn(row.quantidade_aprovada),
+    valorAprovado: parseNumericColumn(row.valor_aprovado),
+  };
+}
+
+/**
+ * Mesma tabela de 99,9M+ linhas de buscarProducaoMensal (~5,8s medido) —
+ * cacheada pelo mesmo motivo. Os 2 primeiros dígitos do código SIGTAP
+ * identificam o grupo de procedimento; não há seed de-para para nome
+ * legível ainda (ver notes/backlog.md).
+ */
+async function buscarProducaoPorGrupo(
+  municipioId: number,
+): Promise<ProducaoPorGrupo[]> {
+  const rows = await query<ProducaoPorGrupoRow>(
+    `select
+       left(codigo_procedimento, 2) as grupo,
+       sum(quantidade_aprovada) as quantidade_aprovada,
+       sum(valor_aprovado) as valor_aprovado
+     from marts.fct_producao_ambulatorial
+     where id_municipio_estabelecimento = $1
+     group by 1
+     order by valor_aprovado desc
+     limit $2`,
+    [municipioId, GRUPOS_JANELA],
+  );
+  return rows.map(mapRowToProducaoPorGrupo);
+}
+
+export const getProducaoPorGrupo = unstable_cache(
+  buscarProducaoPorGrupo,
+  ["producao-por-grupo-por-municipio"],
   { revalidate: 60 * 60 * 24 },
 );
