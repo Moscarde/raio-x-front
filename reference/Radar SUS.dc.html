@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html data-dc-canvas=""><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><style>
+    .sc-placeholder{background:color-mix(in srgb,currentColor 8%,transparent);
+      border:1px solid color-mix(in srgb,currentColor 50%,transparent);
+      border-radius:2px;box-sizing:border-box;overflow:hidden}
+    @keyframes sc-shine{0%{background-position:100% 50%}100%{background-position:0% 50%}}
+    html.sc-dc-streaming .sc-placeholder,
+    html.sc-dc-streaming .sc-interp.sc-missing{position:relative;
+      background:color-mix(in srgb,currentColor 5%,transparent);
+      border-color:transparent}
+    html.sc-dc-streaming .sc-placeholder::before,
+    html.sc-dc-streaming .sc-interp.sc-missing::before{content:'';
+      position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(90deg,rgba(217,119,87,0) 25%,rgba(247,225,211,.95) 37%,rgba(217,119,87,0) 63%);
+      background-size:400% 100%;animation:sc-shine 1.4s ease infinite}
+    html.sc-dc-streaming .sc-placeholder:nth-child(n+9 of .sc-placeholder)::before,
+    html.sc-dc-streaming .sc-interp.sc-missing:nth-child(n+9 of .sc-interp.sc-missing)::before{animation:none;
+      background:color-mix(in srgb,currentColor 8%,transparent)}
+    .sc-placeholder-error{padding:4px 8px;font:11px/1.4 ui-monospace,monospace;
+      color:color-mix(in srgb,currentColor 70%,transparent);word-break:break-word}
+    .sc-interp.sc-missing{display:inline-block;width:2em;height:1em;overflow:hidden;
+      vertical-align:text-bottom;background:rgba(255,255,255,.3);border:1px solid rgba(0,0,0,.5);
+      border-radius:2px;box-sizing:border-box;color:transparent;
+      user-select:none}
+    .sc-interp.sc-unresolved{font-family:ui-monospace,monospace;font-size:.85em;
+      color:color-mix(in srgb,currentColor 50%,transparent);
+      background:color-mix(in srgb,currentColor 10%,transparent);border-radius:3px;
+      padding:0 3px}
+    .sc-host.sc-has-error{position:relative}
+    .sc-logic-error{position:absolute;top:8px;left:8px;z-index:2147483647;max-width:60ch;
+      padding:6px 10px;background:#b00020;color:#fff;font:12px/1.4 ui-monospace,monospace;
+      border-radius:4px;white-space:pre-wrap;pointer-events:none}
+    /* Mirrors PRINT_BASELINE_CSS in apps/web deck-stage-export.ts — keep both
+       in sync until dc-runtime regains a build step. */
+    @media print {
+      @page { margin: 0.5cm; }
+      figure, table { break-inside: avoid; }
+      #dc-root, #dc-root > .sc-host { height: auto; }
+      *, *::before, *::after {
+        print-color-adjust: exact; -webkit-print-color-adjust: exact;
+        backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+        animation-delay: -99s !important; animation-duration: .001s !important;
+        animation-iteration-count: 1 !important; animation-fill-mode: both !important;
+        animation-play-state: running !important; transition-duration: 0s !important;
+      }
+    }
+  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="Radar%20SUS.dc_files/support.js"></script><style>x-dc{display:none!important}</style><script src="Radar%20SUS.dc_files/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script><script src="Radar%20SUS.dc_files/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+<style data-dc-canvas="">html,body{background:#f0eee6}#dc-root>.sc-host{position:relative}</style><style id="__dc-atomics">.fx{display:flex}.col{display:flex;flex-direction:column}.grid{display:grid}.ac{align-items:center}.jc{justify-content:center}.jb{justify-content:space-between}.f1{flex:1}.noshrink{flex-shrink:0}.wrap{flex-wrap:wrap}.fw5{font-weight:500}.fw6{font-weight:600}.fw7{font-weight:700}.fw8{font-weight:800}.fs11{font-size:11px}.fs12{font-size:12px}.fs13{font-size:13px}.fs14{font-size:14px}.fs15{font-size:15px}.fs16{font-size:16px}.fs20{font-size:20px}.fs22{font-size:22px}.upper{text-transform:uppercase}.tc{text-align:center}.nowrap{white-space:nowrap}.gap8{gap:8px}.gap10{gap:10px}.gap12{gap:12px}.gap16{gap:16px}.gap24{gap:24px}.m0{margin:0}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.posrel{position:relative}.posabs{position:absolute}.round{border-radius:50%}.ohide{overflow:hidden}.bbox{box-sizing:border-box}.pointer{cursor:pointer}.w100{width:100%}.b0{border:none}</style><style>html,body{height:100%;margin:0}#dc-root,#dc-root>.sc-host{height:100%}</style><meta name="design_doc_mode" content="canvas" data-dc-tpl="1"><link rel="preconnect" href="https://fonts.googleapis.com/" data-dc-tpl="2"><link href="Radar%20SUS.dc_files/css2.css" rel="stylesheet" data-dc-tpl="3"><style data-dc-tpl="4">
+body{margin:0;background:#e9edf2;font-family:'IBM Plex Sans',system-ui,sans-serif}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px 'IBM Plex Mono',monospace;padding:3px 7px;background:#16202b;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 'IBM Plex Sans',sans-serif;color:#16202b}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px 'IBM Plex Mono',monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#16202b;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'IBM Plex Sans',sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.dv-opt:target .dv-oid{background:#0b4f8a;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 'IBM Plex Sans',sans-serif;color:rgba(0,0,0,.5)}
+</style></head>
+<body class="vsc-initialized">
+<div id="dc-root"><div class="sc-host" data-sc-name="Radar SUS"><section data-dc-tpl="5" class="dv-turn" id="t1"><div data-dc-tpl="6" class="dv-thd"><a data-dc-tpl="7" class="dv-tid" href="#t1">1</a><span data-dc-tpl="8" class="dv-tname">Radar SUS Municipal — identidade visual, landing e dashboard (Paraty · RJ, dados simulados)</span></div><div data-dc-tpl="9" class="dv-opts"><div data-dc-tpl="10" class="dv-opt" id="1a"><div data-dc-tpl="11" class="dv-olabel"><a data-dc-tpl="12" class="dv-oid" href="#1a">1a</a>Identidade visual — logo, cores, tipografia, componentes</div><div data-dc-tpl="13" class="dv-card" style="width: 760px; padding: 36px; display: flex; flex-direction: column; gap: 32px; box-sizing: border-box;">
+
+  <div data-dc-tpl="14" style="display: flex; flex-direction: column; gap: 14px;">
+    <div data-dc-tpl="15" style="font: 500 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.08em;">MARCA — 3 PROPOSTAS</div>
+    <div data-dc-tpl="16" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+      <div data-dc-tpl="17" style="border: 1px solid rgb(226, 232, 239); border-radius: 10px; padding: 24px 18px; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+        <svg data-dc-tpl="18" width="56" height="56" viewBox="0 0 56 56">
+          <circle data-dc-tpl="19" cx="28" cy="28" r="25" fill="none" stroke="#0b4f8a" stroke-width="3"></circle>
+          <circle data-dc-tpl="20" cx="28" cy="28" r="16" fill="none" stroke="#1a7fc4" stroke-width="2.5"></circle>
+          <circle data-dc-tpl="21" cx="28" cy="28" r="7" fill="none" stroke="#22b8cf" stroke-width="2"></circle>
+          <circle data-dc-tpl="22" cx="40" cy="17" r="4.5" fill="#22b8cf"></circle>
+        </svg>
+        <div data-dc-tpl="23" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+          <div data-dc-tpl="24" style="font: 700 17px &quot;Space Grotesk&quot;, sans-serif; color: rgb(11, 79, 138);">Radar<span data-dc-tpl="25" style="color: rgb(34, 184, 207);">SUS</span></div>
+          <div data-dc-tpl="26" style="font: 9px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.14em;">MUNICIPAL</div>
+        </div>
+        <div data-dc-tpl="27" style="font: 10.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); text-align: center;">A — Anéis de radar com eco. Monitoramento contínuo.</div>
+      </div>
+      <div data-dc-tpl="28" style="border: 1px solid rgb(226, 232, 239); border-radius: 10px; padding: 24px 18px; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+        <svg data-dc-tpl="29" width="56" height="56" viewBox="0 0 56 56">
+          <circle data-dc-tpl="30" cx="28" cy="28" r="25" fill="#0b4f8a"></circle>
+          <rect data-dc-tpl="31" x="24" y="14" width="8" height="28" rx="2" fill="#ffffff"></rect>
+          <rect data-dc-tpl="32" x="14" y="24" width="28" height="8" rx="2" fill="#ffffff"></rect>
+          <circle data-dc-tpl="33" cx="41" cy="15" r="6" fill="#22b8cf"></circle>
+        </svg>
+        <div data-dc-tpl="34" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+          <div data-dc-tpl="35" style="font: 700 17px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">Radar<span data-dc-tpl="36" style="color: rgb(11, 79, 138);">SUS</span></div>
+          <div data-dc-tpl="37" style="font: 9px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.14em;">MUNICIPAL</div>
+        </div>
+        <div data-dc-tpl="38" style="font: 10.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); text-align: center;">B — Cruz da saúde sob vigilância. Ponto de alerta.</div>
+      </div>
+      <div data-dc-tpl="39" style="border: 1px solid rgb(226, 232, 239); border-radius: 10px; padding: 24px 18px; display: flex; flex-direction: column; align-items: center; gap: 14px;">
+        <svg data-dc-tpl="40" width="56" height="56" viewBox="0 0 56 56">
+          <circle data-dc-tpl="41" cx="28" cy="34" r="18" fill="none" stroke="#0b4f8a" stroke-width="3"></circle>
+          <circle data-dc-tpl="42" cx="28" cy="34" r="9" fill="none" stroke="#1a7fc4" stroke-width="2.5"></circle>
+          <line data-dc-tpl="43" x1="28" y1="34" x2="46" y2="10" stroke="#22b8cf" stroke-width="3" stroke-linecap="round"></line>
+          <circle data-dc-tpl="44" cx="46" cy="10" r="4" fill="#22b8cf"></circle>
+        </svg>
+        <div data-dc-tpl="45" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+          <div data-dc-tpl="46" style="font: 700 17px &quot;Space Grotesk&quot;, sans-serif; color: rgb(11, 79, 138);">Radar<span data-dc-tpl="47" style="color: rgb(34, 184, 207);">SUS</span></div>
+          <div data-dc-tpl="48" style="font: 9px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.14em;">MUNICIPAL</div>
+        </div>
+        <div data-dc-tpl="49" style="font: 10.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); text-align: center;">C — Varredura de radar. Busca ativa de sinais.</div>
+      </div>
+    </div>
+  </div>
+
+  <div data-dc-tpl="50" style="display: flex; flex-direction: column; gap: 14px;">
+    <div data-dc-tpl="51" style="font: 500 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.08em;">PALETA</div>
+    <div data-dc-tpl="52" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;">
+      <div data-dc-tpl="53" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="54" style="height: 64px; border-radius: 8px; background: rgb(11, 79, 138);"></div><div data-dc-tpl="55" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(22, 32, 43);">#0B4F8A<br data-dc-tpl="56"><span data-dc-tpl="57" style="color: rgb(90, 107, 124);">Azul institucional</span></div></div>
+      <div data-dc-tpl="58" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="59" style="height: 64px; border-radius: 8px; background: rgb(26, 127, 196);"></div><div data-dc-tpl="60" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(22, 32, 43);">#1A7FC4<br data-dc-tpl="61"><span data-dc-tpl="62" style="color: rgb(90, 107, 124);">Azul dados</span></div></div>
+      <div data-dc-tpl="63" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="64" style="height: 64px; border-radius: 8px; background: rgb(34, 184, 207);"></div><div data-dc-tpl="65" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(22, 32, 43);">#22B8CF<br data-dc-tpl="66"><span data-dc-tpl="67" style="color: rgb(90, 107, 124);">Ciano destaque</span></div></div>
+      <div data-dc-tpl="68" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="69" style="height: 64px; border-radius: 8px; background: rgb(27, 158, 75);"></div><div data-dc-tpl="70" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(22, 32, 43);">#1B9E4B<br data-dc-tpl="71"><span data-dc-tpl="72" style="color: rgb(90, 107, 124);">Meta atingida</span></div></div>
+      <div data-dc-tpl="73" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="74" style="height: 64px; border-radius: 8px; background: rgb(230, 168, 23);"></div><div data-dc-tpl="75" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(22, 32, 43);">#E6A817<br data-dc-tpl="76"><span data-dc-tpl="77" style="color: rgb(90, 107, 124);">Atenção</span></div></div>
+      <div data-dc-tpl="78" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="79" style="height: 64px; border-radius: 8px; background: rgb(214, 69, 69);"></div><div data-dc-tpl="80" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(22, 32, 43);">#D64545<br data-dc-tpl="81"><span data-dc-tpl="82" style="color: rgb(90, 107, 124);">Crítico</span></div></div>
+    </div>
+    <div data-dc-tpl="83" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;">
+      <div data-dc-tpl="84" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="85" style="height: 36px; border-radius: 8px; background: rgb(22, 32, 43);"></div><div data-dc-tpl="86" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124);">#16202B · Texto</div></div>
+      <div data-dc-tpl="87" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="88" style="height: 36px; border-radius: 8px; background: rgb(90, 107, 124);"></div><div data-dc-tpl="89" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124);">#5A6B7C · Apoio</div></div>
+      <div data-dc-tpl="90" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="91" style="height: 36px; border-radius: 8px; background: rgb(226, 232, 239);"></div><div data-dc-tpl="92" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124);">#E2E8EF · Bordas</div></div>
+      <div data-dc-tpl="93" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="94" style="height: 36px; border-radius: 8px; background: rgb(244, 247, 250); border: 1px solid rgb(226, 232, 239);"></div><div data-dc-tpl="95" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124);">#F4F7FA · Fundo</div></div>
+      <div data-dc-tpl="96" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="97" style="height: 36px; border-radius: 8px; background: rgb(10, 46, 79);"></div><div data-dc-tpl="98" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124);">#0A2E4F · Navy escuro</div></div>
+      <div data-dc-tpl="99" style="display: flex; flex-direction: column; gap: 6px;"><div data-dc-tpl="100" style="height: 36px; border-radius: 8px; background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239);"></div><div data-dc-tpl="101" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124);">#FFFFFF · Cartões</div></div>
+    </div>
+  </div>
+
+  <div data-dc-tpl="102" style="display: flex; flex-direction: column; gap: 14px;">
+    <div data-dc-tpl="103" style="font: 500 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.08em;">TIPOGRAFIA</div>
+    <div data-dc-tpl="104" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div data-dc-tpl="105" style="border: 1px solid rgb(226, 232, 239); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <div data-dc-tpl="106" style="font: 700 26px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">Space Grotesk</div>
+        <div data-dc-tpl="107" style="font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Títulos, números e KPIs. Moderna, geométrica, boa leitura de dados.</div>
+        <div data-dc-tpl="108" style="font-style: normal; font-variant: tabular-nums; font-weight: 700; font-stretch: normal; font-size: 34px; line-height: normal; font-family: &quot;Space Grotesk&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(11, 79, 138);">87,4% · 45.478</div>
+      </div>
+      <div data-dc-tpl="109" style="border: 1px solid rgb(226, 232, 239); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+        <div data-dc-tpl="110" style="font: 600 26px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">IBM Plex Sans</div>
+        <div data-dc-tpl="111" style="font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Corpo de texto, tabelas e interface. Neutra e institucional. IBM Plex Mono para rótulos técnicos e fontes de dados.</div>
+        <div data-dc-tpl="112" style="font: 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">A cobertura da APS atingiu 87,4% no último quadrimestre.</div>
+      </div>
+    </div>
+  </div>
+
+  <div data-dc-tpl="113" style="display: flex; flex-direction: column; gap: 14px;">
+    <div data-dc-tpl="114" style="font: 500 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.08em;">COMPONENTES-BASE</div>
+    <div data-dc-tpl="115" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+      <div data-dc-tpl="116" style="background: rgb(11, 79, 138); color: rgb(255, 255, 255); font: 600 13px &quot;IBM Plex Sans&quot;, sans-serif; padding: 10px 20px; border-radius: 8px;">Gerar diagnóstico</div>
+      <div data-dc-tpl="117" style="background: rgb(255, 255, 255); color: rgb(11, 79, 138); border: 1.5px solid rgb(11, 79, 138); font: 600 13px &quot;IBM Plex Sans&quot;, sans-serif; padding: 9px 20px; border-radius: 8px;">Ver relatório</div>
+      <div data-dc-tpl="118" style="display: flex; align-items: center; gap: 6px; background: rgb(232, 246, 236); color: rgb(27, 158, 75); font: 600 11px &quot;IBM Plex Sans&quot;, sans-serif; padding: 5px 12px; border-radius: 999px;"><span data-dc-tpl="119" style="width: 7px; height: 7px; border-radius: 50%; background: rgb(27, 158, 75);"></span>Meta atingida</div>
+      <div data-dc-tpl="120" style="display: flex; align-items: center; gap: 6px; background: rgb(253, 243, 220); color: rgb(163, 119, 10); font: 600 11px &quot;IBM Plex Sans&quot;, sans-serif; padding: 5px 12px; border-radius: 999px;"><span data-dc-tpl="121" style="width: 7px; height: 7px; border-radius: 50%; background: rgb(230, 168, 23);"></span>Atenção</div>
+      <div data-dc-tpl="122" style="display: flex; align-items: center; gap: 6px; background: rgb(251, 233, 233); color: rgb(214, 69, 69); font: 600 11px &quot;IBM Plex Sans&quot;, sans-serif; padding: 5px 12px; border-radius: 999px;"><span data-dc-tpl="123" style="width: 7px; height: 7px; border-radius: 50%; background: rgb(214, 69, 69);"></span>Crítico</div>
+      <div data-dc-tpl="124" style="background: rgb(244, 247, 250); border: 1px solid rgb(226, 232, 239); border-radius: 10px; padding: 14px 18px; display: flex; flex-direction: column; gap: 2px;">
+        <div data-dc-tpl="125" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.06em;">COBERTURA APS</div>
+        <div data-dc-tpl="126" style="font-style: normal; font-variant: tabular-nums; font-weight: 700; font-stretch: normal; font-size: 24px; line-height: normal; font-family: &quot;Space Grotesk&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">87,4%</div>
+        <div data-dc-tpl="127" style="font: 500 10.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(27, 158, 75);">▲ 2,1 p.p. vs quadrimestre anterior</div>
+      </div>
+    </div>
+  </div></div></div><div data-dc-tpl="128" class="dv-opt" id="1b"><div data-dc-tpl="129" class="dv-olabel"><a data-dc-tpl="130" class="dv-oid" href="#1b">1b</a>Landing page comercial — demonstração</div><div data-dc-tpl="131" class="dv-card" style="width: 1280px; box-sizing: border-box;">
+
+  
+  <div data-dc-tpl="132" style="display: flex; align-items: center; justify-content: space-between; padding: 18px 56px; border-bottom: 1px solid rgb(226, 232, 239);">
+    <div data-dc-tpl="133" style="display: flex; align-items: center; gap: 10px;">
+      <svg data-dc-tpl="134" width="30" height="30" viewBox="0 0 56 56"><circle data-dc-tpl="135" cx="28" cy="28" r="25" fill="none" stroke="#0b4f8a" stroke-width="4"></circle><circle data-dc-tpl="136" cx="28" cy="28" r="14" fill="none" stroke="#1a7fc4" stroke-width="3.5"></circle><circle data-dc-tpl="137" cx="40" cy="17" r="6" fill="#22b8cf"></circle></svg>
+      <div data-dc-tpl="138" style="font: 700 17px &quot;Space Grotesk&quot;, sans-serif; color: rgb(11, 79, 138);">Radar<span data-dc-tpl="139" style="color: rgb(34, 184, 207);">SUS</span> <span data-dc-tpl="140" style="font: 500 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.1em;">MUNICIPAL</span></div>
+    </div>
+    <div data-dc-tpl="141" style="display: flex; align-items: center; gap: 28px; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">
+      <span data-dc-tpl="142">Módulos</span><span data-dc-tpl="143">Como funciona</span><span data-dc-tpl="144">Planos</span>
+      <div data-dc-tpl="145" style="background: rgb(11, 79, 138); color: rgb(255, 255, 255); font: 600 13px &quot;IBM Plex Sans&quot;, sans-serif; padding: 9px 18px; border-radius: 8px;">Solicitar diagnóstico</div>
+    </div>
+  </div>
+
+  
+  <div data-dc-tpl="146" style="background: linear-gradient(rgb(244, 247, 250) 0%, rgb(255, 255, 255) 100%); display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; padding: 64px 56px; align-items: center;">
+    <div data-dc-tpl="147" style="display: flex; flex-direction: column; gap: 22px;">
+      <div data-dc-tpl="148" style="display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; background: rgb(230, 240, 248); color: rgb(11, 79, 138); font: 600 11px &quot;IBM Plex Mono&quot;, monospace; letter-spacing: 0.06em; padding: 6px 12px; border-radius: 999px;"><span data-dc-tpl="149" style="width: 7px; height: 7px; border-radius: 50%; background: rgb(34, 184, 207);"></span>CENTRAL DE INTELIGÊNCIA MUNICIPAL EM SAÚDE</div>
+      <div data-dc-tpl="150" style="font: 700 42px / 1.15 &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43); text-wrap: balance;">Transforme dados públicos do SUS em decisões práticas para sua secretaria de saúde.</div>
+      <div data-dc-tpl="151" style="font: 16px / 1.6 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); max-width: 520px;">Monitoramos CNES, APS, produção, internações, urgência e indicadores municipais em uma plataforma simples para gestores.</div>
+      <div data-dc-tpl="152" style="display: flex; gap: 10px; align-items: stretch; max-width: 520px;">
+        <div data-dc-tpl="153" style="flex: 1 1 0%; display: flex; align-items: center; gap: 10px; border: 1.5px solid rgb(205, 216, 227); border-radius: 10px; padding: 0px 16px; background: rgb(255, 255, 255);">
+          <svg data-dc-tpl="154" width="15" height="15" viewBox="0 0 20 20"><circle data-dc-tpl="155" cx="9" cy="9" r="6.5" fill="none" stroke="#5a6b7c" stroke-width="2"></circle><line data-dc-tpl="156" x1="14" y1="14" x2="18" y2="18" stroke="#5a6b7c" stroke-width="2" stroke-linecap="round"></line></svg>
+          <span data-dc-tpl="157" style="font: 14px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(138, 153, 168);">Digite o nome do seu município…</span>
+        </div>
+        <div data-dc-tpl="158" style="background: rgb(11, 79, 138); color: rgb(255, 255, 255); font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; padding: 14px 24px; border-radius: 10px; white-space: nowrap;">Gerar diagnóstico gratuito</div>
+      </div>
+      <div data-dc-tpl="159" style="font: 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">FONTES PÚBLICAS · CNES · TABNET/DATASUS · SISAB/e-SUS APS · IBGE</div>
+    </div>
+    
+    <div data-dc-tpl="160" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 14px; box-shadow: rgba(11, 79, 138, 0.12) 0px 18px 40px; padding: 22px; display: flex; flex-direction: column; gap: 16px;">
+      <div data-dc-tpl="161" style="display: flex; align-items: center; justify-content: space-between;">
+        <div data-dc-tpl="162" style="display: flex; flex-direction: column; gap: 2px;">
+          <div data-dc-tpl="163" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.08em;">DIAGNÓSTICO AUTOMÁTICO</div>
+          <div data-dc-tpl="164" style="font: 700 17px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">Paraty · RJ</div>
+        </div>
+        <div data-dc-tpl="165" style="display: flex; align-items: center; gap: 6px; background: rgb(232, 246, 236); color: rgb(27, 158, 75); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 4px 10px; border-radius: 999px;"><span data-dc-tpl="166" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(27, 158, 75);"></span>Atualizado</div>
+      </div>
+      <div data-dc-tpl="167" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+        <div data-dc-tpl="168" style="background: rgb(244, 247, 250); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 2px;"><div data-dc-tpl="169" style="font: 500 9px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124);">COBERTURA APS</div><div data-dc-tpl="170" style="font: 700 20px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">87,4%</div></div>
+        <div data-dc-tpl="171" style="background: rgb(244, 247, 250); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 2px;"><div data-dc-tpl="172" style="font: 500 9px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124);">UNIDADES CNES</div><div data-dc-tpl="173" style="font: 700 20px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">34</div></div>
+        <div data-dc-tpl="174" style="background: rgb(244, 247, 250); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 2px;"><div data-dc-tpl="175" style="font: 500 9px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124);">ALERTAS</div><div data-dc-tpl="176" style="font: 700 20px &quot;Space Grotesk&quot;, sans-serif; color: rgb(214, 69, 69);">6</div></div>
+      </div>
+      <div data-dc-tpl="177" style="display: flex; flex-direction: column; gap: 8px;">
+        <div data-dc-tpl="178" style="display: flex; align-items: center; gap: 10px; border: 1px solid rgb(243, 217, 217); background: rgb(253, 247, 247); border-radius: 8px; padding: 10px 12px;"><span data-dc-tpl="179" style="width: 8px; height: 8px; border-radius: 50%; background: rgb(214, 69, 69); flex: 0 0 auto;"></span><div data-dc-tpl="180" style="font: 11.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">2 unidades com CNES sem atualização há mais de 6 meses</div></div>
+        <div data-dc-tpl="181" style="display: flex; align-items: center; gap: 10px; border: 1px solid rgb(243, 231, 198); background: rgb(253, 250, 241); border-radius: 8px; padding: 10px 12px;"><span data-dc-tpl="182" style="width: 8px; height: 8px; border-radius: 50%; background: rgb(230, 168, 23); flex: 0 0 auto;"></span><div data-dc-tpl="183" style="font: 11.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Queda de 18% na produção ambulatorial em maio</div></div>
+      </div>
+      <div data-dc-tpl="184" style="display: flex; align-items: end; gap: 5px; height: 56px; padding-top: 4px;">
+        <div data-dc-tpl="185" style="flex: 1 1 0%; height: 38%; background: rgb(207, 226, 240); border-radius: 3px;"></div><div data-dc-tpl="186" style="flex: 1 1 0%; height: 52%; background: rgb(207, 226, 240); border-radius: 3px;"></div><div data-dc-tpl="187" style="flex: 1 1 0%; height: 46%; background: rgb(207, 226, 240); border-radius: 3px;"></div><div data-dc-tpl="188" style="flex: 1 1 0%; height: 64%; background: rgb(207, 226, 240); border-radius: 3px;"></div><div data-dc-tpl="189" style="flex: 1 1 0%; height: 58%; background: rgb(207, 226, 240); border-radius: 3px;"></div><div data-dc-tpl="190" style="flex: 1 1 0%; height: 72%; background: rgb(26, 127, 196); border-radius: 3px;"></div><div data-dc-tpl="191" style="flex: 1 1 0%; height: 66%; background: rgb(26, 127, 196); border-radius: 3px;"></div><div data-dc-tpl="192" style="flex: 1 1 0%; height: 84%; background: rgb(11, 79, 138); border-radius: 3px;"></div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div data-dc-tpl="193" style="padding: 56px; display: flex; flex-direction: column; gap: 28px; background: rgb(255, 255, 255);">
+    <div data-dc-tpl="194" style="display: flex; flex-direction: column; gap: 8px; max-width: 640px;">
+      <div data-dc-tpl="195" style="font: 500 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(26, 127, 196); letter-spacing: 0.1em;">MÓDULOS</div>
+      <div data-dc-tpl="196" style="font: 700 28px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">Uma plataforma, todas as respostas que a gestão precisa</div>
+    </div>
+    <div data-dc-tpl="197" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;">
+      <div data-dc-tpl="198" style="border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="199" style="width: 38px; height: 38px; border-radius: 10px; background: rgb(230, 240, 248); display: flex; align-items: center; justify-content: center;"><svg data-dc-tpl="200" width="18" height="18" viewBox="0 0 20 20"><circle data-dc-tpl="201" cx="10" cy="10" r="8" fill="none" stroke="#0b4f8a" stroke-width="2"></circle><circle data-dc-tpl="202" cx="10" cy="10" r="3.5" fill="none" stroke="#0b4f8a" stroke-width="2"></circle></svg></div>
+        <div data-dc-tpl="203" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Raio-X Municipal</div>
+        <div data-dc-tpl="204" style="font: 12.5px / 1.55 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Fotografia executiva da rede, produção, estrutura e atenção básica — sem consultar vários sistemas.</div>
+      </div>
+      <div data-dc-tpl="205" style="border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="206" style="width: 38px; height: 38px; border-radius: 10px; background: rgb(230, 240, 248); display: flex; align-items: center; justify-content: center;"><svg data-dc-tpl="207" width="18" height="18" viewBox="0 0 20 20"><rect data-dc-tpl="208" x="3" y="3" width="14" height="14" rx="2" fill="none" stroke="#0b4f8a" stroke-width="2"></rect><line data-dc-tpl="209" x1="7" y1="10" x2="9" y2="12.5" stroke="#0b4f8a" stroke-width="2" stroke-linecap="round"></line><line data-dc-tpl="210" x1="9" y1="12.5" x2="13.5" y2="7.5" stroke="#0b4f8a" stroke-width="2" stroke-linecap="round"></line></svg></div>
+        <div data-dc-tpl="211" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Auditor CNES</div>
+        <div data-dc-tpl="212" style="font: 12.5px / 1.55 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Unidades desatualizadas, vínculos inconsistentes e serviços sem produção — antes de virarem perda de recurso.</div>
+      </div>
+      <div data-dc-tpl="213" style="border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="214" style="width: 38px; height: 38px; border-radius: 10px; background: rgb(230, 240, 248); display: flex; align-items: center; justify-content: center;"><svg data-dc-tpl="215" width="18" height="18" viewBox="0 0 20 20"><rect data-dc-tpl="216" x="3" y="10" width="3.5" height="7" rx="1" fill="#0b4f8a"></rect><rect data-dc-tpl="217" x="8.2" y="6" width="3.5" height="11" rx="1" fill="#0b4f8a"></rect><rect data-dc-tpl="218" x="13.5" y="3" width="3.5" height="14" rx="1" fill="#0b4f8a"></rect></svg></div>
+        <div data-dc-tpl="219" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Radar APS</div>
+        <div data-dc-tpl="220" style="font: 12.5px / 1.55 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Indicadores por equipe, unidade e quadrimestre, com alertas de meta e necessidade de busca ativa.</div>
+      </div>
+      <div data-dc-tpl="221" style="border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="222" style="width: 38px; height: 38px; border-radius: 10px; background: rgb(230, 240, 248); display: flex; align-items: center; justify-content: center;"><svg data-dc-tpl="223" width="18" height="18" viewBox="0 0 20 20"><circle data-dc-tpl="224" cx="6" cy="10" r="4" fill="none" stroke="#0b4f8a" stroke-width="2"></circle><circle data-dc-tpl="225" cx="14" cy="10" r="4" fill="none" stroke="#0b4f8a" stroke-width="2"></circle></svg></div>
+        <div data-dc-tpl="226" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Comparador de Municípios</div>
+        <div data-dc-tpl="227" style="font: 12.5px / 1.55 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Compare-se com pares justos: mesma população, região de saúde e porte de rede.</div>
+      </div>
+      <div data-dc-tpl="228" style="border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="229" style="width: 38px; height: 38px; border-radius: 10px; background: rgb(230, 240, 248); display: flex; align-items: center; justify-content: center;"><svg data-dc-tpl="230" width="18" height="18" viewBox="0 0 20 20"><circle data-dc-tpl="231" cx="10" cy="10" r="7.5" fill="none" stroke="#0b4f8a" stroke-width="2"></circle><line data-dc-tpl="232" x1="10" y1="6" x2="10" y2="11" stroke="#0b4f8a" stroke-width="2" stroke-linecap="round"></line><circle data-dc-tpl="233" cx="10" cy="14" r="1.3" fill="#0b4f8a"></circle></svg></div>
+        <div data-dc-tpl="234" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Alertas de Inconsistência</div>
+        <div data-dc-tpl="235" style="font: 12.5px / 1.55 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Quedas bruscas de produção, unidades sem alimentação e incompatibilidades entre produção e capacidade.</div>
+      </div>
+      <div data-dc-tpl="236" style="border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="237" style="width: 38px; height: 38px; border-radius: 10px; background: rgb(230, 240, 248); display: flex; align-items: center; justify-content: center;"><svg data-dc-tpl="238" width="18" height="18" viewBox="0 0 20 20"><rect data-dc-tpl="239" x="4" y="3" width="12" height="14" rx="2" fill="none" stroke="#0b4f8a" stroke-width="2"></rect><line data-dc-tpl="240" x1="7" y1="7.5" x2="13" y2="7.5" stroke="#0b4f8a" stroke-width="2" stroke-linecap="round"></line><line data-dc-tpl="241" x1="7" y1="11" x2="13" y2="11" stroke="#0b4f8a" stroke-width="2" stroke-linecap="round"></line></svg></div>
+        <div data-dc-tpl="242" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Relatório Executivo com IA</div>
+        <div data-dc-tpl="243" style="font: 12.5px / 1.55 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Análises interpretadas, variações explicadas e pauta de reunião pronta — em PDF e apresentação.</div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div data-dc-tpl="244" style="padding: 56px; background: rgb(10, 46, 79); display: flex; flex-direction: column; gap: 32px;">
+    <div data-dc-tpl="245" style="display: flex; flex-direction: column; gap: 8px;">
+      <div data-dc-tpl="246" style="font: 500 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(34, 184, 207); letter-spacing: 0.1em;">COMO FUNCIONA</div>
+      <div data-dc-tpl="247" style="font: 700 28px &quot;Space Grotesk&quot;, sans-serif; color: rgb(255, 255, 255);">Do dado público à decisão em três passos</div>
+    </div>
+    <div data-dc-tpl="248" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;">
+      <div data-dc-tpl="249" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="250" style="font: 700 15px &quot;Space Grotesk&quot;, sans-serif; color: rgb(34, 184, 207);">01</div>
+        <div data-dc-tpl="251" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(255, 255, 255);">Escolha o município</div>
+        <div data-dc-tpl="252" style="font: 12.5px / 1.55 &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.65);">Coletamos e cruzamos automaticamente CNES, SISAB, TABNET e dados demográficos.</div>
+      </div>
+      <div data-dc-tpl="253" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="254" style="font: 700 15px &quot;Space Grotesk&quot;, sans-serif; color: rgb(34, 184, 207);">02</div>
+        <div data-dc-tpl="255" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(255, 255, 255);">Receba o diagnóstico</div>
+        <div data-dc-tpl="256" style="font: 12.5px / 1.55 &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.65);">Visão executiva, alertas priorizados e comparação com municípios semelhantes.</div>
+      </div>
+      <div data-dc-tpl="257" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="258" style="font: 700 15px &quot;Space Grotesk&quot;, sans-serif; color: rgb(34, 184, 207);">03</div>
+        <div data-dc-tpl="259" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(255, 255, 255);">Aja com prioridade</div>
+        <div data-dc-tpl="260" style="font: 12.5px / 1.55 &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.65);">Relatórios mensais, pautas de reunião e recomendações práticas geradas com IA.</div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div data-dc-tpl="261" style="padding: 56px; background: rgb(244, 247, 250); display: flex; flex-direction: column; gap: 28px;">
+    <div data-dc-tpl="262" style="display: flex; flex-direction: column; gap: 8px;">
+      <div data-dc-tpl="263" style="font: 500 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(26, 127, 196); letter-spacing: 0.1em;">PLANOS</div>
+      <div data-dc-tpl="264" style="font: 700 28px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">Comece pelo diagnóstico, evolua para a plataforma</div>
+    </div>
+    <div data-dc-tpl="265" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+      <div data-dc-tpl="266" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="267" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Diagnóstico</div>
+        <div data-dc-tpl="268" style="font: 12px / 1.5 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); flex: 1 1 0%;">Raio-X municipal, indicadores, comparação regional, auditoria básica CNES e recomendações. Entrega única.</div>
+        <div data-dc-tpl="269" style="font: 600 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(26, 127, 196); letter-spacing: 0.06em;">PORTA DE ENTRADA</div>
+      </div>
+      <div data-dc-tpl="270" style="background: rgb(255, 255, 255); border: 2px solid rgb(11, 79, 138); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px; position: relative;">
+        <div data-dc-tpl="271" style="position: absolute; top: -10px; left: 20px; background: rgb(11, 79, 138); color: rgb(255, 255, 255); font: 600 10px &quot;IBM Plex Mono&quot;, monospace; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 999px;">RECOMENDADO</div>
+        <div data-dc-tpl="272" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Monitoramento Mensal</div>
+        <div data-dc-tpl="273" style="font: 12px / 1.5 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); flex: 1 1 0%;">Dashboard, relatórios mensais, alertas, atualização automática e reuniões de acompanhamento.</div>
+        <div data-dc-tpl="274" style="font: 600 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(26, 127, 196); letter-spacing: 0.06em;">ASSINATURA</div>
+      </div>
+      <div data-dc-tpl="275" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="276" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Plataforma Municipal</div>
+        <div data-dc-tpl="277" style="font: 12px / 1.5 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); flex: 1 1 0%;">Integração de dados internos, APS, urgência, regulação, permissões, IA e customizações.</div>
+        <div data-dc-tpl="278" style="font: 600 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(26, 127, 196); letter-spacing: 0.06em;">PROJETO COMPLETO</div>
+      </div>
+      <div data-dc-tpl="279" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <div data-dc-tpl="280" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Relatórios como Serviço</div>
+        <div data-dc-tpl="281" style="font: 12px / 1.5 &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); flex: 1 1 0%;">Relatórios semi-automatizados para municípios que ainda não querem implantar a plataforma.</div>
+        <div data-dc-tpl="282" style="font: 600 11px &quot;IBM Plex Mono&quot;, monospace; color: rgb(26, 127, 196); letter-spacing: 0.06em;">VENDA RÁPIDA</div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div data-dc-tpl="283" style="padding: 56px; background: rgb(255, 255, 255); display: flex; align-items: center; justify-content: space-between; gap: 32px; border-top: 1px solid rgb(226, 232, 239);">
+    <div data-dc-tpl="284" style="display: flex; flex-direction: column; gap: 6px;">
+      <div data-dc-tpl="285" style="font: 700 24px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">Veja o diagnóstico do seu município em minutos.</div>
+      <div data-dc-tpl="286" style="font: 13.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Demonstração gratuita com dados públicos. Sem contrato, sem instalação.</div>
+    </div>
+    <div data-dc-tpl="287" style="display: flex; gap: 10px; flex: 0 0 auto;">
+      <div data-dc-tpl="288" style="background: rgb(11, 79, 138); color: rgb(255, 255, 255); font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; padding: 13px 24px; border-radius: 10px;">Solicitar diagnóstico completo</div>
+      <div data-dc-tpl="289" style="background: rgb(255, 255, 255); color: rgb(11, 79, 138); border: 1.5px solid rgb(11, 79, 138); font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; padding: 12px 24px; border-radius: 10px;">Falar com a equipe</div>
+    </div>
+  </div></div></div><div data-dc-tpl="290" class="dv-opt" id="1c"><div data-dc-tpl="291" class="dv-olabel"><a data-dc-tpl="292" class="dv-oid" href="#1c">1c</a>Dashboard — Raio-X Municipal (visão geral)</div><div data-dc-tpl="293" class="dv-card" style="width: 1440px; display: flex; box-sizing: border-box;" data-screen-label="Dashboard Raio-X">
+
+  
+  <div data-dc-tpl="294" style="width: 236px; flex: 0 0 auto; background: rgb(10, 46, 79); display: flex; flex-direction: column; padding: 22px 14px; gap: 26px; min-height: 900px; box-sizing: border-box;">
+    <div data-dc-tpl="295" style="display: flex; align-items: center; gap: 9px; padding: 0px 8px;">
+      <svg data-dc-tpl="296" width="26" height="26" viewBox="0 0 56 56"><circle data-dc-tpl="297" cx="28" cy="28" r="25" fill="none" stroke="#22b8cf" stroke-width="4"></circle><circle data-dc-tpl="298" cx="28" cy="28" r="14" fill="none" stroke="#1a7fc4" stroke-width="3.5"></circle><circle data-dc-tpl="299" cx="40" cy="17" r="6" fill="#22b8cf"></circle></svg>
+      <div data-dc-tpl="300" style="font: 700 15px &quot;Space Grotesk&quot;, sans-serif; color: rgb(255, 255, 255);">Radar<span data-dc-tpl="301" style="color: rgb(34, 184, 207);">SUS</span></div>
+    </div>
+    <div data-dc-tpl="302" style="display: flex; flex-direction: column; gap: 3px;">
+      <div data-dc-tpl="303" style="display: flex; align-items: center; gap: 10px; background: rgba(34, 184, 207, 0.16); border-left: 3px solid rgb(34, 184, 207); border-radius: 0px 8px 8px 0px; padding: 10px 12px; font: 600 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(255, 255, 255);">Visão geral</div>
+      <div data-dc-tpl="304" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Rede e CNES</div>
+      <div data-dc-tpl="305" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Atenção Primária</div>
+      <div data-dc-tpl="306" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Produção</div>
+      <div data-dc-tpl="307" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);"><span data-dc-tpl="308">Alertas</span><span data-dc-tpl="309" style="background: rgb(214, 69, 69); color: rgb(255, 255, 255); font: 600 10px &quot;IBM Plex Mono&quot;, monospace; padding: 2px 7px; border-radius: 999px;">6</span></div>
+      <div data-dc-tpl="310" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Comparador</div>
+      <div data-dc-tpl="311" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Relatório IA</div>
+    </div>
+    <div data-dc-tpl="312" style="margin-top: auto; display: flex; flex-direction: column; gap: 12px;">
+      <div data-dc-tpl="313" style="background: rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px;">
+        <div data-dc-tpl="314" style="font: 500 9.5px &quot;IBM Plex Mono&quot;, monospace; color: rgb(34, 184, 207); letter-spacing: 0.06em;">ÚLTIMA ATUALIZAÇÃO</div>
+        <div data-dc-tpl="315" style="font: 11.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.75);">CNES · jun 2026<br data-dc-tpl="316">SISAB · Q1 2026</div>
+      </div>
+      <div data-dc-tpl="317" style="display: flex; align-items: center; gap: 10px; padding: 0px 4px;">
+        <div data-dc-tpl="318" style="width: 30px; height: 30px; border-radius: 50%; background: rgb(26, 127, 196); display: flex; align-items: center; justify-content: center; font: 600 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(255, 255, 255);">MC</div>
+        <div data-dc-tpl="319" style="display: flex; flex-direction: column;"><div data-dc-tpl="320" style="font: 600 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(255, 255, 255);">M. Cardoso</div><div data-dc-tpl="321" style="font: 10px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.55);">SMS Paraty</div></div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div data-dc-tpl="322" style="flex: 1 1 0%; background: rgb(244, 247, 250); padding: 26px 30px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; min-width: 0px;">
+    
+    <div data-dc-tpl="323" style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div data-dc-tpl="324" style="display: flex; flex-direction: column; gap: 3px;">
+        <div data-dc-tpl="325" style="font: 500 10.5px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.08em;">RAIO-X MUNICIPAL</div>
+        <div data-dc-tpl="326" style="display: flex; align-items: baseline; gap: 10px;">
+          <div data-dc-tpl="327" style="font: 700 24px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">Paraty</div>
+          <div data-dc-tpl="328" style="font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">RJ · Região Baía da Ilha Grande · 45.478 hab.</div>
+        </div>
+      </div>
+      <div data-dc-tpl="329" style="display: flex; gap: 10px; align-items: center;">
+        <div data-dc-tpl="330" style="display: flex; align-items: center; gap: 8px; background: rgb(255, 255, 255); border: 1px solid rgb(205, 216, 227); border-radius: 8px; padding: 9px 14px; font: 500 12.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Paraty · RJ <span data-dc-tpl="331" style="color: rgb(138, 153, 168); font-size: 9px;">▼</span></div>
+        <div data-dc-tpl="332" style="display: flex; align-items: center; gap: 8px; background: rgb(255, 255, 255); border: 1px solid rgb(205, 216, 227); border-radius: 8px; padding: 9px 14px; font: 500 12.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Últimos 12 meses <span data-dc-tpl="333" style="color: rgb(138, 153, 168); font-size: 9px;">▼</span></div>
+        <div data-dc-tpl="334" style="background: rgb(11, 79, 138); color: rgb(255, 255, 255); font: 600 12.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 10px 16px; border-radius: 8px;">Gerar relatório executivo</div>
+      </div>
+    </div>
+
+    
+    <div data-dc-tpl="335" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;">
+      <div data-dc-tpl="336" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <div data-dc-tpl="337" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.06em;">COBERTURA APS</div>
+        <div data-dc-tpl="338" style="font-style: normal; font-variant: tabular-nums; font-weight: 700; font-stretch: normal; font-size: 27px; line-height: normal; font-family: &quot;Space Grotesk&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">87,4%</div>
+        <div data-dc-tpl="339" style="font: 500 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(27, 158, 75);">▲ 2,1 p.p. no quadrimestre</div>
+      </div>
+      <div data-dc-tpl="340" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <div data-dc-tpl="341" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.06em;">EQUIPES ESF</div>
+        <div data-dc-tpl="342" style="font-style: normal; font-variant: tabular-nums; font-weight: 700; font-stretch: normal; font-size: 27px; line-height: normal; font-family: &quot;Space Grotesk&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">16</div>
+        <div data-dc-tpl="343" style="font: 500 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">13 completas · 3 incompletas</div>
+      </div>
+      <div data-dc-tpl="344" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <div data-dc-tpl="345" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.06em;">UNIDADES CNES</div>
+        <div data-dc-tpl="346" style="font-style: normal; font-variant: tabular-nums; font-weight: 700; font-stretch: normal; font-size: 27px; line-height: normal; font-family: &quot;Space Grotesk&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">34</div>
+        <div data-dc-tpl="347" style="font: 500 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(214, 69, 69);">2 sem atualização &gt; 6 meses</div>
+      </div>
+      <div data-dc-tpl="348" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <div data-dc-tpl="349" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.06em;">PRODUÇÃO AMB. / MÊS</div>
+        <div data-dc-tpl="350" style="font-style: normal; font-variant: tabular-nums; font-weight: 700; font-stretch: normal; font-size: 27px; line-height: normal; font-family: &quot;Space Grotesk&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">21.340</div>
+        <div data-dc-tpl="351" style="font: 500 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(230, 168, 23);">▼ 4,2% vs média 12m</div>
+      </div>
+      <div data-dc-tpl="352" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px;">
+        <div data-dc-tpl="353" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.06em;">INTERNAÇÕES ICSAP</div>
+        <div data-dc-tpl="354" style="font-style: normal; font-variant: tabular-nums; font-weight: 700; font-stretch: normal; font-size: 27px; line-height: normal; font-family: &quot;Space Grotesk&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">18,2%</div>
+        <div data-dc-tpl="355" style="font: 500 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">do total de internações</div>
+      </div>
+    </div>
+
+    
+    <div data-dc-tpl="356" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px;">
+      <div data-dc-tpl="357" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+        <div data-dc-tpl="358" style="display: flex; align-items: center; justify-content: space-between;">
+          <div data-dc-tpl="359" style="font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Produção ambulatorial — últimos 12 meses</div>
+          <div data-dc-tpl="360" style="display: flex; gap: 14px; font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">
+            <span data-dc-tpl="361" style="display: flex; align-items: center; gap: 5px;"><span data-dc-tpl="362" style="width: 9px; height: 9px; border-radius: 2px; background: rgb(26, 127, 196);"></span>Realizado</span>
+            <span data-dc-tpl="363" style="display: flex; align-items: center; gap: 5px;"><span data-dc-tpl="364" style="width: 9px; height: 2px; background: rgb(34, 184, 207);"></span>Média 12m</span>
+          </div>
+        </div>
+        <div data-dc-tpl="365" style="position: relative; height: 180px;">
+          <div data-dc-tpl="366" style="position: absolute; left: 0px; right: 0px; top: 34%; border-top: 2px dashed rgb(34, 184, 207); opacity: 0.6;"></div>
+          <div data-dc-tpl="367" style="display: flex; align-items: end; gap: 10px; height: 100%;">
+            <div data-dc-tpl="368" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="369" style="width: 100%; height: 58%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="370" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">jul</div></div>
+            <div data-dc-tpl="371" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="372" style="width: 100%; height: 63%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="373" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">ago</div></div>
+            <div data-dc-tpl="374" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="375" style="width: 100%; height: 66%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="376" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">set</div></div>
+            <div data-dc-tpl="377" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="378" style="width: 100%; height: 71%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="379" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">out</div></div>
+            <div data-dc-tpl="380" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="381" style="width: 100%; height: 68%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="382" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">nov</div></div>
+            <div data-dc-tpl="383" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="384" style="width: 100%; height: 55%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="385" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">dez</div></div>
+            <div data-dc-tpl="386" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="387" style="width: 100%; height: 62%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="388" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">jan</div></div>
+            <div data-dc-tpl="389" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="390" style="width: 100%; height: 70%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="391" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">fev</div></div>
+            <div data-dc-tpl="392" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="393" style="width: 100%; height: 74%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="394" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">mar</div></div>
+            <div data-dc-tpl="395" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="396" style="width: 100%; height: 69%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="397" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">abr</div></div>
+            <div data-dc-tpl="398" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="399" style="width: 100%; height: 53%; background: rgb(230, 168, 23); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="400" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">mai</div></div>
+            <div data-dc-tpl="401" style="flex: 1 1 0%; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: end;"><div data-dc-tpl="402" style="width: 100%; height: 60%; background: rgb(26, 127, 196); border-radius: 4px 4px 0px 0px;"></div><div data-dc-tpl="403" style="font: 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">jun</div></div>
+          </div>
+        </div>
+        <div data-dc-tpl="404" style="font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); background: rgb(244, 247, 250); border-radius: 8px; padding: 10px 14px;">Queda de 18% em maio concentrada em 2 unidades sem envio de produção — ver <span data-dc-tpl="405" style="color: rgb(11, 79, 138); font-weight: 600;">Alertas</span>.</div>
+      </div>
+
+      <div data-dc-tpl="406" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+        <div data-dc-tpl="407" style="display: flex; align-items: center; justify-content: space-between;">
+          <div data-dc-tpl="408" style="font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Alertas priorizados</div>
+          <div data-dc-tpl="409" style="font: 600 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(11, 79, 138);">Ver todos (6)</div>
+        </div>
+        <div data-dc-tpl="410" style="display: flex; flex-direction: column; gap: 8px;">
+          <div data-dc-tpl="411" style="display: flex; gap: 10px; border: 1px solid rgb(243, 217, 217); background: rgb(253, 247, 247); border-radius: 9px; padding: 11px 13px;"><span data-dc-tpl="412" style="width: 8px; height: 8px; border-radius: 50%; background: rgb(214, 69, 69); flex: 0 0 auto; margin-top: 4px;"></span><div data-dc-tpl="413" style="display: flex; flex-direction: column; gap: 2px;"><div data-dc-tpl="414" style="font: 600 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">CNES desatualizado — UBS Ilha das Cobras</div><div data-dc-tpl="415" style="font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Sem atualização há 8 meses. Risco de glosa no financiamento.</div></div></div>
+          <div data-dc-tpl="416" style="display: flex; gap: 10px; border: 1px solid rgb(243, 217, 217); background: rgb(253, 247, 247); border-radius: 9px; padding: 11px 13px;"><span data-dc-tpl="417" style="width: 8px; height: 8px; border-radius: 50%; background: rgb(214, 69, 69); flex: 0 0 auto; margin-top: 4px;"></span><div data-dc-tpl="418" style="display: flex; flex-direction: column; gap: 2px;"><div data-dc-tpl="419" style="font: 600 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Unidade sem produção — CS Patitiba</div><div data-dc-tpl="420" style="font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Nenhum BPA enviado em maio e junho.</div></div></div>
+          <div data-dc-tpl="421" style="display: flex; gap: 10px; border: 1px solid rgb(243, 231, 198); background: rgb(253, 250, 241); border-radius: 9px; padding: 11px 13px;"><span data-dc-tpl="422" style="width: 8px; height: 8px; border-radius: 50%; background: rgb(230, 168, 23); flex: 0 0 auto; margin-top: 4px;"></span><div data-dc-tpl="423" style="display: flex; flex-direction: column; gap: 2px;"><div data-dc-tpl="424" style="font: 600 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">3 equipes ESF incompletas</div><div data-dc-tpl="425" style="font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Vagas de enfermeiro abertas há mais de 90 dias.</div></div></div>
+          <div data-dc-tpl="426" style="display: flex; gap: 10px; border: 1px solid rgb(243, 231, 198); background: rgb(253, 250, 241); border-radius: 9px; padding: 11px 13px;"><span data-dc-tpl="427" style="width: 8px; height: 8px; border-radius: 50%; background: rgb(230, 168, 23); flex: 0 0 auto; margin-top: 4px;"></span><div data-dc-tpl="428" style="display: flex; flex-direction: column; gap: 2px;"><div data-dc-tpl="429" style="font: 600 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Indicador C1 abaixo da meta</div><div data-dc-tpl="430" style="font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Pré-natal: 6 consultas em 61% (meta 80%).</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div data-dc-tpl="431" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 14px;">
+      <div data-dc-tpl="432" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+        <div data-dc-tpl="433" style="font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Rede instalada</div>
+        <div data-dc-tpl="434" style="display: flex; flex-direction: column; gap: 10px;">
+          <div data-dc-tpl="435" style="display: flex; flex-direction: column; gap: 5px;"><div data-dc-tpl="436" style="display: flex; justify-content: space-between; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="437">Unidades Básicas de Saúde</span><span data-dc-tpl="438" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif;">18</span></div><div data-dc-tpl="439" style="height: 7px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="440" style="width: 100%; height: 100%; background: rgb(11, 79, 138); border-radius: 99px;"></div></div></div>
+          <div data-dc-tpl="441" style="display: flex; flex-direction: column; gap: 5px;"><div data-dc-tpl="442" style="display: flex; justify-content: space-between; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="443">Consultórios / clínicas</span><span data-dc-tpl="444" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif;">9</span></div><div data-dc-tpl="445" style="height: 7px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="446" style="width: 50%; height: 100%; background: rgb(26, 127, 196); border-radius: 99px;"></div></div></div>
+          <div data-dc-tpl="447" style="display: flex; flex-direction: column; gap: 5px;"><div data-dc-tpl="448" style="display: flex; justify-content: space-between; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="449">Apoio diagnóstico (SADT)</span><span data-dc-tpl="450" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif;">4</span></div><div data-dc-tpl="451" style="height: 7px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="452" style="width: 22%; height: 100%; background: rgb(34, 184, 207); border-radius: 99px;"></div></div></div>
+          <div data-dc-tpl="453" style="display: flex; flex-direction: column; gap: 5px;"><div data-dc-tpl="454" style="display: flex; justify-content: space-between; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="455">Urgência (UPA / PS)</span><span data-dc-tpl="456" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif;">2</span></div><div data-dc-tpl="457" style="height: 7px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="458" style="width: 11%; height: 100%; background: rgb(90, 107, 124); border-radius: 99px;"></div></div></div>
+          <div data-dc-tpl="459" style="display: flex; flex-direction: column; gap: 5px;"><div data-dc-tpl="460" style="display: flex; justify-content: space-between; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="461">Hospital geral</span><span data-dc-tpl="462" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif;">1</span></div><div data-dc-tpl="463" style="height: 7px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="464" style="width: 6%; height: 100%; background: rgb(90, 107, 124); border-radius: 99px;"></div></div></div>
+        </div>
+        <div data-dc-tpl="465" style="font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); border-top: 1px solid rgb(238, 242, 246); padding-top: 12px;">62 leitos SUS · 41 profissionais médicos ativos no CNES</div>
+      </div>
+
+      <div data-dc-tpl="466" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+        <div data-dc-tpl="467" style="display: flex; align-items: center; justify-content: space-between;">
+          <div data-dc-tpl="468" style="font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Indicadores APS — Q1 2026 (Previne Brasil)</div>
+          <div data-dc-tpl="469" style="font: 600 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(11, 79, 138);">Abrir Radar APS</div>
+        </div>
+        <div data-dc-tpl="470" style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1.2fr; gap: 0px; font: 600 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168); letter-spacing: 0.05em; padding: 0px 10px 8px; border-bottom: 1px solid rgb(238, 242, 246);"><span data-dc-tpl="471">INDICADOR</span><span data-dc-tpl="472" style="text-align: right;">RESULTADO</span><span data-dc-tpl="473" style="text-align: right;">META</span><span data-dc-tpl="474" style="text-align: right;">STATUS</span></div>
+        <div data-dc-tpl="475" style="display: flex; flex-direction: column;">
+          <div data-dc-tpl="476" style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1.2fr; align-items: center; padding: 9px 10px; border-bottom: 1px solid rgb(244, 247, 250); font: 12.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="477">C1 · Pré-natal (6 consultas)</span><span data-dc-tpl="478" style="text-align: right; font: 600 13px &quot;Space Grotesk&quot;, sans-serif;">61%</span><span data-dc-tpl="479" style="text-align: right; color: rgb(90, 107, 124);">80%</span><span data-dc-tpl="480" style="display: flex; justify-content: end;"><span data-dc-tpl="481" style="display: flex; align-items: center; gap: 5px; background: rgb(251, 233, 233); color: rgb(214, 69, 69); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="482" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(214, 69, 69);"></span>Crítico</span></span></div>
+          <div data-dc-tpl="483" style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1.2fr; align-items: center; padding: 9px 10px; border-bottom: 1px solid rgb(244, 247, 250); font: 12.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="484">C2 · Pré-natal (sífilis e HIV)</span><span data-dc-tpl="485" style="text-align: right; font: 600 13px &quot;Space Grotesk&quot;, sans-serif;">78%</span><span data-dc-tpl="486" style="text-align: right; color: rgb(90, 107, 124);">80%</span><span data-dc-tpl="487" style="display: flex; justify-content: end;"><span data-dc-tpl="488" style="display: flex; align-items: center; gap: 5px; background: rgb(253, 243, 220); color: rgb(163, 119, 10); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="489" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(230, 168, 23);"></span>Atenção</span></span></div>
+          <div data-dc-tpl="490" style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1.2fr; align-items: center; padding: 9px 10px; border-bottom: 1px solid rgb(244, 247, 250); font: 12.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="491">C3 · Gestantes — saúde bucal</span><span data-dc-tpl="492" style="text-align: right; font: 600 13px &quot;Space Grotesk&quot;, sans-serif;">64%</span><span data-dc-tpl="493" style="text-align: right; color: rgb(90, 107, 124);">60%</span><span data-dc-tpl="494" style="display: flex; justify-content: end;"><span data-dc-tpl="495" style="display: flex; align-items: center; gap: 5px; background: rgb(232, 246, 236); color: rgb(27, 158, 75); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="496" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(27, 158, 75);"></span>Meta ok</span></span></div>
+          <div data-dc-tpl="497" style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1.2fr; align-items: center; padding: 9px 10px; border-bottom: 1px solid rgb(244, 247, 250); font: 12.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="498">C4 · Citopatológico</span><span data-dc-tpl="499" style="text-align: right; font: 600 13px &quot;Space Grotesk&quot;, sans-serif;">42%</span><span data-dc-tpl="500" style="text-align: right; color: rgb(90, 107, 124);">40%</span><span data-dc-tpl="501" style="display: flex; justify-content: end;"><span data-dc-tpl="502" style="display: flex; align-items: center; gap: 5px; background: rgb(232, 246, 236); color: rgb(27, 158, 75); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="503" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(27, 158, 75);"></span>Meta ok</span></span></div>
+          <div data-dc-tpl="504" style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1.2fr; align-items: center; padding: 9px 10px; border-bottom: 1px solid rgb(244, 247, 250); font: 12.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="505">C5 · Vacinação infantil (polio + penta)</span><span data-dc-tpl="506" style="text-align: right; font: 600 13px &quot;Space Grotesk&quot;, sans-serif;">89%</span><span data-dc-tpl="507" style="text-align: right; color: rgb(90, 107, 124);">95%</span><span data-dc-tpl="508" style="display: flex; justify-content: end;"><span data-dc-tpl="509" style="display: flex; align-items: center; gap: 5px; background: rgb(253, 243, 220); color: rgb(163, 119, 10); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="510" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(230, 168, 23);"></span>Atenção</span></span></div>
+          <div data-dc-tpl="511" style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1.2fr; align-items: center; padding: 9px 10px; font: 12.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="512">C6 · Hipertensos com PA aferida</span><span data-dc-tpl="513" style="text-align: right; font: 600 13px &quot;Space Grotesk&quot;, sans-serif;">57%</span><span data-dc-tpl="514" style="text-align: right; color: rgb(90, 107, 124);">50%</span><span data-dc-tpl="515" style="display: flex; justify-content: end;"><span data-dc-tpl="516" style="display: flex; align-items: center; gap: 5px; background: rgb(232, 246, 236); color: rgb(27, 158, 75); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="517" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(27, 158, 75);"></span>Meta ok</span></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div data-dc-tpl="518" style="font: 10.5px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168); text-align: center;">DADOS SIMULADOS PARA DEMONSTRAÇÃO · FONTES: CNES · SISAB · TABNET/DATASUS · IBGE</div>
+  </div></div></div><div data-dc-tpl="519" class="dv-opt" id="1d"><div data-dc-tpl="520" class="dv-olabel"><a data-dc-tpl="521" class="dv-oid" href="#1d">1d</a>Dashboard — Comparador de municípios semelhantes</div><div data-dc-tpl="522" class="dv-card" style="width: 1440px; display: flex; box-sizing: border-box;" data-screen-label="Dashboard Comparador">
+
+  
+  <div data-dc-tpl="523" style="width: 236px; flex: 0 0 auto; background: rgb(10, 46, 79); display: flex; flex-direction: column; padding: 22px 14px; gap: 26px; min-height: 860px; box-sizing: border-box;">
+    <div data-dc-tpl="524" style="display: flex; align-items: center; gap: 9px; padding: 0px 8px;">
+      <svg data-dc-tpl="525" width="26" height="26" viewBox="0 0 56 56"><circle data-dc-tpl="526" cx="28" cy="28" r="25" fill="none" stroke="#22b8cf" stroke-width="4"></circle><circle data-dc-tpl="527" cx="28" cy="28" r="14" fill="none" stroke="#1a7fc4" stroke-width="3.5"></circle><circle data-dc-tpl="528" cx="40" cy="17" r="6" fill="#22b8cf"></circle></svg>
+      <div data-dc-tpl="529" style="font: 700 15px &quot;Space Grotesk&quot;, sans-serif; color: rgb(255, 255, 255);">Radar<span data-dc-tpl="530" style="color: rgb(34, 184, 207);">SUS</span></div>
+    </div>
+    <div data-dc-tpl="531" style="display: flex; flex-direction: column; gap: 3px;">
+      <div data-dc-tpl="532" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Visão geral</div>
+      <div data-dc-tpl="533" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Rede e CNES</div>
+      <div data-dc-tpl="534" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Atenção Primária</div>
+      <div data-dc-tpl="535" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Produção</div>
+      <div data-dc-tpl="536" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);"><span data-dc-tpl="537">Alertas</span><span data-dc-tpl="538" style="background: rgb(214, 69, 69); color: rgb(255, 255, 255); font: 600 10px &quot;IBM Plex Mono&quot;, monospace; padding: 2px 7px; border-radius: 999px;">6</span></div>
+      <div data-dc-tpl="539" style="display: flex; align-items: center; gap: 10px; background: rgba(34, 184, 207, 0.16); border-left: 3px solid rgb(34, 184, 207); border-radius: 0px 8px 8px 0px; padding: 10px 12px; font: 600 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(255, 255, 255);">Comparador</div>
+      <div data-dc-tpl="540" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-left: 3px solid transparent; font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.62);">Relatório IA</div>
+    </div>
+    <div data-dc-tpl="541" style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 0px 4px;">
+      <div data-dc-tpl="542" style="width: 30px; height: 30px; border-radius: 50%; background: rgb(26, 127, 196); display: flex; align-items: center; justify-content: center; font: 600 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(255, 255, 255);">MC</div>
+      <div data-dc-tpl="543" style="display: flex; flex-direction: column;"><div data-dc-tpl="544" style="font: 600 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(255, 255, 255);">M. Cardoso</div><div data-dc-tpl="545" style="font: 10px &quot;IBM Plex Sans&quot;, sans-serif; color: rgba(255, 255, 255, 0.55);">SMS Paraty</div></div>
+    </div>
+  </div>
+
+  
+  <div data-dc-tpl="546" style="flex: 1 1 0%; background: rgb(244, 247, 250); padding: 26px 30px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; min-width: 0px;">
+    <div data-dc-tpl="547" style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div data-dc-tpl="548" style="display: flex; flex-direction: column; gap: 3px;">
+        <div data-dc-tpl="549" style="font: 500 10.5px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.08em;">COMPARADOR DE MUNICÍPIOS</div>
+        <div data-dc-tpl="550" style="display: flex; align-items: baseline; gap: 10px;">
+          <div data-dc-tpl="551" style="font: 700 24px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">Paraty vs. pares</div>
+          <div data-dc-tpl="552" style="font: 500 13px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Critério: população 35–65 mil · interior RJ · porte de rede semelhante</div>
+        </div>
+      </div>
+      <div data-dc-tpl="553" style="display: flex; gap: 10px; align-items: center;">
+        <div data-dc-tpl="554" style="display: flex; align-items: center; gap: 8px; background: rgb(255, 255, 255); border: 1px solid rgb(205, 216, 227); border-radius: 8px; padding: 9px 14px; font: 500 12.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Critério de pareamento <span data-dc-tpl="555" style="color: rgb(138, 153, 168); font-size: 9px;">▼</span></div>
+        <div data-dc-tpl="556" style="background: rgb(11, 79, 138); color: rgb(255, 255, 255); font: 600 12.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 10px 16px; border-radius: 8px;">Exportar comparação</div>
+      </div>
+    </div>
+
+    
+    <div data-dc-tpl="557" style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <div data-dc-tpl="558" style="display: flex; align-items: center; gap: 8px; background: rgb(11, 79, 138); color: rgb(255, 255, 255); font: 600 12px &quot;IBM Plex Sans&quot;, sans-serif; padding: 8px 16px; border-radius: 999px;">Paraty <span data-dc-tpl="559" style="font: 10.5px &quot;IBM Plex Mono&quot;, monospace; opacity: 0.75;">45,5 mil</span></div>
+      <div data-dc-tpl="560" style="display: flex; align-items: center; gap: 8px; background: rgb(255, 255, 255); border: 1px solid rgb(205, 216, 227); color: rgb(22, 32, 43); font: 500 12px &quot;IBM Plex Sans&quot;, sans-serif; padding: 8px 16px; border-radius: 999px;">Casimiro de Abreu <span data-dc-tpl="561" style="font: 10.5px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">46,7 mil</span></div>
+      <div data-dc-tpl="562" style="display: flex; align-items: center; gap: 8px; background: rgb(255, 255, 255); border: 1px solid rgb(205, 216, 227); color: rgb(22, 32, 43); font: 500 12px &quot;IBM Plex Sans&quot;, sans-serif; padding: 8px 16px; border-radius: 999px;">Miguel Pereira <span data-dc-tpl="563" style="font: 10.5px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">37,9 mil</span></div>
+      <div data-dc-tpl="564" style="display: flex; align-items: center; gap: 8px; background: rgb(255, 255, 255); border: 1px solid rgb(205, 216, 227); color: rgb(22, 32, 43); font: 500 12px &quot;IBM Plex Sans&quot;, sans-serif; padding: 8px 16px; border-radius: 999px;">Vassouras <span data-dc-tpl="565" style="font: 10.5px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">37,1 mil</span></div>
+      <div data-dc-tpl="566" style="display: flex; align-items: center; gap: 8px; background: rgb(255, 255, 255); border: 1px solid rgb(205, 216, 227); color: rgb(22, 32, 43); font: 500 12px &quot;IBM Plex Sans&quot;, sans-serif; padding: 8px 16px; border-radius: 999px;">Guapimirim <span data-dc-tpl="567" style="font: 10.5px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168);">61,4 mil</span></div>
+      <div data-dc-tpl="568" style="display: flex; align-items: center; gap: 6px; background: rgb(255, 255, 255); border: 1px dashed rgb(205, 216, 227); color: rgb(90, 107, 124); font: 500 12px &quot;IBM Plex Sans&quot;, sans-serif; padding: 8px 16px; border-radius: 999px;">+ Adicionar município</div>
+    </div>
+
+    
+    <div data-dc-tpl="569" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+      <div data-dc-tpl="570" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+        <div data-dc-tpl="571" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.06em;">POSIÇÃO GERAL ENTRE PARES</div>
+        <div data-dc-tpl="572" style="display: flex; align-items: baseline; gap: 8px;"><div data-dc-tpl="573" style="font: 700 30px &quot;Space Grotesk&quot;, sans-serif; color: rgb(22, 32, 43);">2º</div><div data-dc-tpl="574" style="font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">de 5 municípios</div></div>
+        <div data-dc-tpl="575" style="font: 11.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">Índice composto de estrutura, produção e APS.</div>
+      </div>
+      <div data-dc-tpl="576" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+        <div data-dc-tpl="577" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.06em;">PONTO FORTE</div>
+        <div data-dc-tpl="578" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(27, 158, 75);">Cobertura APS</div>
+        <div data-dc-tpl="579" style="font: 11.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">87,4% — 9,2 p.p. acima da média dos pares (78,2%).</div>
+      </div>
+      <div data-dc-tpl="580" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px;">
+        <div data-dc-tpl="581" style="font: 500 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(90, 107, 124); letter-spacing: 0.06em;">PONTO DE ATENÇÃO</div>
+        <div data-dc-tpl="582" style="font: 600 15px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(214, 69, 69);">Produção per capita</div>
+        <div data-dc-tpl="583" style="font: 11.5px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124);">0,47/hab·mês — 18% abaixo da média dos pares (0,57).</div>
+      </div>
+    </div>
+
+    
+    <div data-dc-tpl="584" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+      <div data-dc-tpl="585" style="font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Indicadores lado a lado</div>
+      <div data-dc-tpl="586" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1.1fr; gap: 0px; font: 600 10px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168); letter-spacing: 0.05em; padding: 0px 10px 8px; border-bottom: 1px solid rgb(238, 242, 246);">
+        <span data-dc-tpl="587">INDICADOR</span><span data-dc-tpl="588" style="text-align: right; color: rgb(11, 79, 138);">PARATY</span><span data-dc-tpl="589" style="text-align: right;">CASIMIRO</span><span data-dc-tpl="590" style="text-align: right;">MIGUEL P.</span><span data-dc-tpl="591" style="text-align: right;">VASSOURAS</span><span data-dc-tpl="592" style="text-align: right;">GUAPIMIRIM</span><span data-dc-tpl="593" style="text-align: right;">POSIÇÃO</span>
+      </div>
+      <div data-dc-tpl="594" style="display: flex; flex-direction: column;">
+        <div data-dc-tpl="595" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1.1fr; align-items: center; padding: 10px; border-bottom: 1px solid rgb(244, 247, 250); font-style: normal; font-variant: tabular-nums; font-weight: 400; font-stretch: normal; font-size: 12.5px; line-height: normal; font-family: &quot;IBM Plex Sans&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">
+          <span data-dc-tpl="596">Cobertura APS</span><span data-dc-tpl="597" style="text-align: right; font: 700 13px &quot;Space Grotesk&quot;, sans-serif; color: rgb(11, 79, 138); background: rgb(230, 240, 248); border-radius: 6px; padding: 3px 8px; justify-self: end;">87,4%</span><span data-dc-tpl="598" style="text-align: right;">81,0%</span><span data-dc-tpl="599" style="text-align: right;">76,5%</span><span data-dc-tpl="600" style="text-align: right;">83,1%</span><span data-dc-tpl="601" style="text-align: right;">72,3%</span>
+          <span data-dc-tpl="602" style="display: flex; justify-content: end;"><span data-dc-tpl="603" style="display: flex; align-items: center; gap: 5px; background: rgb(232, 246, 236); color: rgb(27, 158, 75); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="604" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(27, 158, 75);"></span>1º de 5</span></span>
+        </div>
+        <div data-dc-tpl="605" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1.1fr; align-items: center; padding: 10px; border-bottom: 1px solid rgb(244, 247, 250); font-style: normal; font-variant: tabular-nums; font-weight: 400; font-stretch: normal; font-size: 12.5px; line-height: normal; font-family: &quot;IBM Plex Sans&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">
+          <span data-dc-tpl="606">Equipes ESF / 10 mil hab.</span><span data-dc-tpl="607" style="text-align: right; font: 700 13px &quot;Space Grotesk&quot;, sans-serif; color: rgb(11, 79, 138); background: rgb(230, 240, 248); border-radius: 6px; padding: 3px 8px; justify-self: end;">3,5</span><span data-dc-tpl="608" style="text-align: right;">3,2</span><span data-dc-tpl="609" style="text-align: right;">3,4</span><span data-dc-tpl="610" style="text-align: right;">3,8</span><span data-dc-tpl="611" style="text-align: right;">2,6</span>
+          <span data-dc-tpl="612" style="display: flex; justify-content: end;"><span data-dc-tpl="613" style="display: flex; align-items: center; gap: 5px; background: rgb(232, 246, 236); color: rgb(27, 158, 75); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="614" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(27, 158, 75);"></span>2º de 5</span></span>
+        </div>
+        <div data-dc-tpl="615" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1.1fr; align-items: center; padding: 10px; border-bottom: 1px solid rgb(244, 247, 250); font-style: normal; font-variant: tabular-nums; font-weight: 400; font-stretch: normal; font-size: 12.5px; line-height: normal; font-family: &quot;IBM Plex Sans&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">
+          <span data-dc-tpl="616">Produção ambulatorial / hab·mês</span><span data-dc-tpl="617" style="text-align: right; font: 700 13px &quot;Space Grotesk&quot;, sans-serif; color: rgb(11, 79, 138); background: rgb(230, 240, 248); border-radius: 6px; padding: 3px 8px; justify-self: end;">0,47</span><span data-dc-tpl="618" style="text-align: right;">0,61</span><span data-dc-tpl="619" style="text-align: right;">0,55</span><span data-dc-tpl="620" style="text-align: right;">0,63</span><span data-dc-tpl="621" style="text-align: right;">0,49</span>
+          <span data-dc-tpl="622" style="display: flex; justify-content: end;"><span data-dc-tpl="623" style="display: flex; align-items: center; gap: 5px; background: rgb(251, 233, 233); color: rgb(214, 69, 69); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="624" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(214, 69, 69);"></span>5º de 5</span></span>
+        </div>
+        <div data-dc-tpl="625" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1.1fr; align-items: center; padding: 10px; border-bottom: 1px solid rgb(244, 247, 250); font-style: normal; font-variant: tabular-nums; font-weight: 400; font-stretch: normal; font-size: 12.5px; line-height: normal; font-family: &quot;IBM Plex Sans&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">
+          <span data-dc-tpl="626">Internações ICSAP (%)</span><span data-dc-tpl="627" style="text-align: right; font: 700 13px &quot;Space Grotesk&quot;, sans-serif; color: rgb(11, 79, 138); background: rgb(230, 240, 248); border-radius: 6px; padding: 3px 8px; justify-self: end;">18,2%</span><span data-dc-tpl="628" style="text-align: right;">21,4%</span><span data-dc-tpl="629" style="text-align: right;">19,8%</span><span data-dc-tpl="630" style="text-align: right;">16,9%</span><span data-dc-tpl="631" style="text-align: right;">24,1%</span>
+          <span data-dc-tpl="632" style="display: flex; justify-content: end;"><span data-dc-tpl="633" style="display: flex; align-items: center; gap: 5px; background: rgb(232, 246, 236); color: rgb(27, 158, 75); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="634" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(27, 158, 75);"></span>2º de 5</span></span>
+        </div>
+        <div data-dc-tpl="635" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1.1fr; align-items: center; padding: 10px; border-bottom: 1px solid rgb(244, 247, 250); font-style: normal; font-variant: tabular-nums; font-weight: 400; font-stretch: normal; font-size: 12.5px; line-height: normal; font-family: &quot;IBM Plex Sans&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">
+          <span data-dc-tpl="636">Leitos SUS / 10 mil hab.</span><span data-dc-tpl="637" style="text-align: right; font: 700 13px &quot;Space Grotesk&quot;, sans-serif; color: rgb(11, 79, 138); background: rgb(230, 240, 248); border-radius: 6px; padding: 3px 8px; justify-self: end;">13,6</span><span data-dc-tpl="638" style="text-align: right;">11,2</span><span data-dc-tpl="639" style="text-align: right;">15,8</span><span data-dc-tpl="640" style="text-align: right;">22,4</span><span data-dc-tpl="641" style="text-align: right;">8,1</span>
+          <span data-dc-tpl="642" style="display: flex; justify-content: end;"><span data-dc-tpl="643" style="display: flex; align-items: center; gap: 5px; background: rgb(253, 243, 220); color: rgb(163, 119, 10); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="644" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(230, 168, 23);"></span>3º de 5</span></span>
+        </div>
+        <div data-dc-tpl="645" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1.1fr; align-items: center; padding: 10px; font-style: normal; font-variant: tabular-nums; font-weight: 400; font-stretch: normal; font-size: 12.5px; line-height: normal; font-family: &quot;IBM Plex Sans&quot;, sans-serif; font-optical-sizing: auto; font-variation-settings: normal; font-size-adjust: none; font-kerning: auto; font-language-override: normal; font-feature-settings: normal; color: rgb(22, 32, 43);">
+          <span data-dc-tpl="646">Unidades com CNES desatualizado</span><span data-dc-tpl="647" style="text-align: right; font: 700 13px &quot;Space Grotesk&quot;, sans-serif; color: rgb(11, 79, 138); background: rgb(230, 240, 248); border-radius: 6px; padding: 3px 8px; justify-self: end;">2</span><span data-dc-tpl="648" style="text-align: right;">1</span><span data-dc-tpl="649" style="text-align: right;">4</span><span data-dc-tpl="650" style="text-align: right;">0</span><span data-dc-tpl="651" style="text-align: right;">6</span>
+          <span data-dc-tpl="652" style="display: flex; justify-content: end;"><span data-dc-tpl="653" style="display: flex; align-items: center; gap: 5px; background: rgb(253, 243, 220); color: rgb(163, 119, 10); font: 600 10.5px &quot;IBM Plex Sans&quot;, sans-serif; padding: 3px 10px; border-radius: 999px;"><span data-dc-tpl="654" style="width: 6px; height: 6px; border-radius: 50%; background: rgb(230, 168, 23);"></span>3º de 5</span></span>
+        </div>
+      </div>
+    </div>
+
+    
+    <div data-dc-tpl="655" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+      <div data-dc-tpl="656" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+        <div data-dc-tpl="657" style="font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Cobertura APS (%)</div>
+        <div data-dc-tpl="658" style="display: flex; flex-direction: column; gap: 9px;">
+          <div data-dc-tpl="659" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="660" style="font-weight: 600; color: rgb(11, 79, 138);">Paraty</span><div data-dc-tpl="661" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="662" style="width: 87%; height: 100%; background: rgb(11, 79, 138); border-radius: 99px;"></div></div><span data-dc-tpl="663" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">87,4</span></div>
+          <div data-dc-tpl="664" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="665">Vassouras</span><div data-dc-tpl="666" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="667" style="width: 83%; height: 100%; background: rgb(157, 185, 209); border-radius: 99px;"></div></div><span data-dc-tpl="668" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">83,1</span></div>
+          <div data-dc-tpl="669" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="670">Casimiro</span><div data-dc-tpl="671" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="672" style="width: 81%; height: 100%; background: rgb(157, 185, 209); border-radius: 99px;"></div></div><span data-dc-tpl="673" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">81,0</span></div>
+          <div data-dc-tpl="674" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="675">Miguel P.</span><div data-dc-tpl="676" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="677" style="width: 76%; height: 100%; background: rgb(157, 185, 209); border-radius: 99px;"></div></div><span data-dc-tpl="678" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">76,5</span></div>
+          <div data-dc-tpl="679" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="680">Guapimirim</span><div data-dc-tpl="681" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="682" style="width: 72%; height: 100%; background: rgb(157, 185, 209); border-radius: 99px;"></div></div><span data-dc-tpl="683" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">72,3</span></div>
+        </div>
+      </div>
+      <div data-dc-tpl="684" style="background: rgb(255, 255, 255); border: 1px solid rgb(226, 232, 239); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+        <div data-dc-tpl="685" style="font: 600 14px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);">Produção ambulatorial por habitante/mês</div>
+        <div data-dc-tpl="686" style="display: flex; flex-direction: column; gap: 9px;">
+          <div data-dc-tpl="687" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="688">Vassouras</span><div data-dc-tpl="689" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="690" style="width: 100%; height: 100%; background: rgb(157, 185, 209); border-radius: 99px;"></div></div><span data-dc-tpl="691" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">0,63</span></div>
+          <div data-dc-tpl="692" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="693">Casimiro</span><div data-dc-tpl="694" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="695" style="width: 97%; height: 100%; background: rgb(157, 185, 209); border-radius: 99px;"></div></div><span data-dc-tpl="696" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">0,61</span></div>
+          <div data-dc-tpl="697" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="698">Miguel P.</span><div data-dc-tpl="699" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="700" style="width: 87%; height: 100%; background: rgb(157, 185, 209); border-radius: 99px;"></div></div><span data-dc-tpl="701" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">0,55</span></div>
+          <div data-dc-tpl="702" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="703">Guapimirim</span><div data-dc-tpl="704" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="705" style="width: 78%; height: 100%; background: rgb(157, 185, 209); border-radius: 99px;"></div></div><span data-dc-tpl="706" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">0,49</span></div>
+          <div data-dc-tpl="707" style="display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font: 12px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(22, 32, 43);"><span data-dc-tpl="708" style="font-weight: 600; color: rgb(214, 69, 69);">Paraty</span><div data-dc-tpl="709" style="height: 16px; background: rgb(238, 242, 246); border-radius: 99px;"><div data-dc-tpl="710" style="width: 75%; height: 100%; background: rgb(214, 69, 69); border-radius: 99px;"></div></div><span data-dc-tpl="711" style="font: 600 12px &quot;Space Grotesk&quot;, sans-serif; text-align: right;">0,47</span></div>
+        </div>
+        <div data-dc-tpl="712" style="font: 11px &quot;IBM Plex Sans&quot;, sans-serif; color: rgb(90, 107, 124); background: rgb(253, 247, 247); border: 1px solid rgb(243, 217, 217); border-radius: 8px; padding: 10px 14px;">Hipótese provável: subregistro, não subprodução — 2 unidades sem envio de BPA. Corrigir o registro pode recuperar financiamento.</div>
+      </div>
+    </div>
+
+    <div data-dc-tpl="713" style="font: 10.5px &quot;IBM Plex Mono&quot;, monospace; color: rgb(138, 153, 168); text-align: center;">DADOS SIMULADOS PARA DEMONSTRAÇÃO · FONTES: CNES · SISAB · TABNET/DATASUS · IBGE</div>
+  </div></div></div></div><p data-dc-tpl="714" class="dv-next">Próximos 
+passos: "aprovo o logo A, aplique em tudo" · "quero ver o Auditor CNES e
+ o Radar APS" · "torne o protótipo interativo com navegação real"</p></section></div></div>
+
+
+</body></html>
