@@ -1,0 +1,89 @@
+import { unstable_cache } from "next/cache";
+import { query } from "@/lib/db/postgres";
+import { parseNumericColumn } from "@/lib/db/numeric";
+import { formatCompetencia } from "@/lib/formatters/competencia-format";
+import type { ProducaoMensalPoint } from "@/types/producao-ambulatorial";
+
+const MESES_JANELA = 12;
+
+type ProducaoMensalRow = {
+  competencia_arquivo: string;
+  quantidade_aprovada: string;
+};
+
+type PontoSemMedia = Omit<ProducaoMensalPoint, "media12m">;
+
+function mapRowParaPonto(row: ProducaoMensalRow): PontoSemMedia | null {
+  try {
+    return {
+      competencia: row.competencia_arquivo,
+      competenciaLabel: formatCompetencia(row.competencia_arquivo),
+      quantidadeAprovada: parseNumericColumn(row.quantidade_aprovada),
+    };
+  } catch (error) {
+    console.warn(
+      JSON.stringify({
+        event: "producao_ambulatorial_competencia_invalida",
+        competencia_arquivo: row.competencia_arquivo,
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+    return null;
+  }
+}
+
+/**
+ * Uma linha com competencia_arquivo malformada não pode derrubar a página
+ * inteira (KPIs, alertas, tabelas) por causa só da produção mensal — a
+ * linha é descartada e logada em vez de propagar a exceção do
+ * formatCompetencia.
+ */
+export function mapRowsToProducaoMensal(
+  rows: ProducaoMensalRow[],
+): ProducaoMensalPoint[] {
+  const pontos = rows
+    .map(mapRowParaPonto)
+    .filter((ponto): ponto is PontoSemMedia => ponto !== null);
+
+  const media12m =
+    pontos.reduce((soma, ponto) => soma + ponto.quantidadeAprovada, 0) /
+    (pontos.length || 1);
+
+  return pontos.map((ponto) => ({ ...ponto, media12m }));
+}
+
+/**
+ * marts.fct_producao_ambulatorial tem 99,9M+ linhas (SIA, RJ inteiro) sem
+ * pré-agregação por município no dbt ainda — filtrar+agrupar aqui leva
+ * ~5,6s por município (medido para Paraty). `unstable_cache` evita repetir
+ * essa varredura a cada carregamento de página; ver notes/backlog.md para
+ * a proposta de mover essa agregação para uma mart dedicada.
+ *
+ * `limit 12` no subselect garante uma janela móvel dos últimos 12 meses —
+ * sem isso, a média cresceria diluída conforme mais competências forem
+ * carregadas, e o rótulo "últimos 12 meses" da tela deixaria de ser real.
+ */
+async function buscarProducaoMensal(
+  municipioId: number,
+): Promise<ProducaoMensalPoint[]> {
+  const rows = await query<ProducaoMensalRow>(
+    `select competencia_arquivo, quantidade_aprovada
+     from (
+       select competencia_arquivo, sum(quantidade_aprovada) as quantidade_aprovada
+       from marts.fct_producao_ambulatorial
+       where id_municipio_estabelecimento = $1
+       group by 1
+       order by 1 desc
+       limit $2
+     ) as ultimos_meses
+     order by competencia_arquivo asc`,
+    [municipioId, MESES_JANELA],
+  );
+  return mapRowsToProducaoMensal(rows);
+}
+
+export const getProducaoMensal = unstable_cache(
+  buscarProducaoMensal,
+  ["producao-mensal-por-municipio"],
+  { revalidate: 60 * 60 * 24 },
+);
