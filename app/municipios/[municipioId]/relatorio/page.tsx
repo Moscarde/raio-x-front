@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { PageShell } from "@/components/layout/page-shell";
+import { PageContentSkeleton } from "@/components/layout/page-content-skeleton";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { DashboardCard } from "@/components/layout/dashboard-card";
 import { MunicipioSelect } from "@/components/filters/municipio-select";
@@ -24,6 +26,29 @@ export default async function RelatorioPage({ params }: PageProps) {
     notFound();
   }
 
+  return (
+    <PageShell
+      sidebar={
+        <AppSidebar
+          municipioId={String(municipioId)}
+          alertCount={0}
+          atualizacoes={[]}
+          usuario={{ nome: "M. Cardoso", iniciais: "MC", orgao: "SMS" }}
+        />
+      }
+    >
+      <Suspense fallback={<PageContentSkeleton />}>
+        <RelatorioContent municipioId={municipioId} />
+      </Suspense>
+    </PageShell>
+  );
+}
+
+type RelatorioContentProps = {
+  municipioId: number;
+};
+
+async function RelatorioContent({ municipioId }: RelatorioContentProps) {
   const [municipio, disponiveis] = await Promise.all([
     getMunicipioResumo(municipioId),
     getMunicipiosDisponiveis(),
@@ -34,20 +59,7 @@ export default async function RelatorioPage({ params }: PageProps) {
   }
 
   return (
-    <PageShell
-      sidebar={
-        <AppSidebar
-          municipioId={String(municipioId)}
-          alertCount={0}
-          atualizacoes={[]}
-          usuario={{
-            nome: "M. Cardoso",
-            iniciais: "MC",
-            orgao: `SMS ${municipio.nomeMunicipio}`,
-          }}
-        />
-      }
-    >
+    <>
       <DashboardHeader
         kicker="Relatório executivo"
         title={municipio.nomeMunicipio}
@@ -77,6 +89,6 @@ export default async function RelatorioPage({ params }: PageProps) {
           Rede e CNES, Atenção Primária e Produção.
         </p>
       </DashboardCard>
-    </PageShell>
+    </>
   );
 }

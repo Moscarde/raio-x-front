@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { PageShell } from "@/components/layout/page-shell";
+import { PageContentSkeleton } from "@/components/layout/page-content-skeleton";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { ContentGrid } from "@/components/layout/content-grid";
 import { DashboardCard } from "@/components/layout/dashboard-card";
@@ -37,6 +39,29 @@ export default async function RedeCnesPage({ params }: PageProps) {
     notFound();
   }
 
+  return (
+    <PageShell
+      sidebar={
+        <AppSidebar
+          municipioId={String(municipioId)}
+          alertCount={0}
+          atualizacoes={[{ fonte: "CNES", competencia: "dez/2025" }]}
+          usuario={{ nome: "M. Cardoso", iniciais: "MC", orgao: "SMS" }}
+        />
+      }
+    >
+      <Suspense fallback={<PageContentSkeleton />}>
+        <RedeCnesContent municipioId={municipioId} />
+      </Suspense>
+    </PageShell>
+  );
+}
+
+type RedeCnesContentProps = {
+  municipioId: number;
+};
+
+async function RedeCnesContent({ municipioId }: RedeCnesContentProps) {
   const [municipio, disponiveis] = await Promise.all([
     getMunicipioResumo(municipioId),
     getMunicipiosDisponiveis(),
@@ -54,20 +79,7 @@ export default async function RedeCnesPage({ params }: PageProps) {
   ]);
 
   return (
-    <PageShell
-      sidebar={
-        <AppSidebar
-          municipioId={String(municipioId)}
-          alertCount={0}
-          atualizacoes={[{ fonte: "CNES", competencia: "dez/2025" }]}
-          usuario={{
-            nome: "M. Cardoso",
-            iniciais: "MC",
-            orgao: `SMS ${municipio.nomeMunicipio}`,
-          }}
-        />
-      }
-    >
+    <>
       <DashboardHeader
         kicker="Rede e CNES"
         title={municipio.nomeMunicipio}
@@ -134,6 +146,6 @@ export default async function RedeCnesPage({ params }: PageProps) {
       <p className="text-center font-mono text-[10.5px] text-text-tertiary">
         FONTES: CNES — DADOS REAIS (raio-x-engenharia)
       </p>
-    </PageShell>
+    </>
   );
 }

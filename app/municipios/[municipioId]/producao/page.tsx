@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { PageShell } from "@/components/layout/page-shell";
+import { PageContentSkeleton } from "@/components/layout/page-content-skeleton";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { ContentGrid } from "@/components/layout/content-grid";
 import { DashboardCard } from "@/components/layout/dashboard-card";
@@ -34,6 +36,29 @@ export default async function ProducaoPage({ params }: PageProps) {
     notFound();
   }
 
+  return (
+    <PageShell
+      sidebar={
+        <AppSidebar
+          municipioId={String(municipioId)}
+          alertCount={0}
+          atualizacoes={[{ fonte: "SIA", competencia: "dez/2025" }]}
+          usuario={{ nome: "M. Cardoso", iniciais: "MC", orgao: "SMS" }}
+        />
+      }
+    >
+      <Suspense fallback={<PageContentSkeleton />}>
+        <ProducaoContent municipioId={municipioId} />
+      </Suspense>
+    </PageShell>
+  );
+}
+
+type ProducaoContentProps = {
+  municipioId: number;
+};
+
+async function ProducaoContent({ municipioId }: ProducaoContentProps) {
   const [municipio, disponiveis] = await Promise.all([
     getMunicipioResumo(municipioId),
     getMunicipiosDisponiveis(),
@@ -58,20 +83,7 @@ export default async function ProducaoPage({ params }: PageProps) {
   );
 
   return (
-    <PageShell
-      sidebar={
-        <AppSidebar
-          municipioId={String(municipioId)}
-          alertCount={0}
-          atualizacoes={[{ fonte: "SIA", competencia: "dez/2025" }]}
-          usuario={{
-            nome: "M. Cardoso",
-            iniciais: "MC",
-            orgao: `SMS ${municipio.nomeMunicipio}`,
-          }}
-        />
-      }
-    >
+    <>
       <DashboardHeader
         kicker="Produção ambulatorial"
         title={municipio.nomeMunicipio}
@@ -118,6 +130,6 @@ export default async function ProducaoPage({ params }: PageProps) {
       <p className="text-center font-mono text-[10.5px] text-text-tertiary">
         FONTES: SIA — DADOS REAIS (raio-x-engenharia)
       </p>
-    </PageShell>
+    </>
   );
 }

@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { PageShell } from "@/components/layout/page-shell";
+import { PageContentSkeleton } from "@/components/layout/page-content-skeleton";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { DashboardCard } from "@/components/layout/dashboard-card";
 import { formatNumber } from "@/lib/formatters/number-format";
@@ -43,14 +45,12 @@ async function buscarLinhaComparativa(
 
 export default async function ComparadorPage() {
   const municipios = await getMunicipiosDisponiveis();
-  const linhas = await Promise.all(municipios.map(buscarLinhaComparativa));
-  const primeiraLinha = linhas[0];
 
   return (
     <PageShell
       sidebar={
         <AppSidebar
-          municipioId={String(primeiraLinha?.municipio.municipioId ?? "")}
+          municipioId={String(municipios[0]?.municipioId ?? "")}
           alertCount={0}
           atualizacoes={[
             { fonte: "CNES", competencia: "dez/2025" },
@@ -60,6 +60,22 @@ export default async function ComparadorPage() {
         />
       }
     >
+      <Suspense fallback={<PageContentSkeleton />}>
+        <ComparadorContent municipios={municipios} />
+      </Suspense>
+    </PageShell>
+  );
+}
+
+type ComparadorContentProps = {
+  municipios: MunicipioResumo[];
+};
+
+async function ComparadorContent({ municipios }: ComparadorContentProps) {
+  const linhas = await Promise.all(municipios.map(buscarLinhaComparativa));
+
+  return (
+    <>
       <DashboardHeader
         kicker="Comparador de municípios"
         title="Municípios com dado real"
@@ -88,7 +104,7 @@ export default async function ComparadorPage() {
       <p className="text-center font-mono text-[10.5px] text-text-tertiary">
         FONTES: CNES · SIA · SIH · SISAB — DADOS REAIS (raio-x-engenharia)
       </p>
-    </PageShell>
+    </>
   );
 }
 

@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { PageShell } from "@/components/layout/page-shell";
+import { PageContentSkeleton } from "@/components/layout/page-content-skeleton";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { DashboardCard } from "@/components/layout/dashboard-card";
 import { AlertList } from "@/components/alerts/alert-list";
@@ -25,15 +27,6 @@ export default async function AlertasPage({ params }: PageProps) {
     notFound();
   }
 
-  const [municipio, disponiveis] = await Promise.all([
-    getMunicipioResumo(municipioId),
-    getMunicipiosDisponiveis(),
-  ]);
-
-  if (!municipio) {
-    notFound();
-  }
-
   return (
     <PageShell
       sidebar={
@@ -44,14 +37,33 @@ export default async function AlertasPage({ params }: PageProps) {
             { fonte: "CNES", competencia: "dez/2025" },
             { fonte: "SISAB", competencia: "2024Q3" },
           ]}
-          usuario={{
-            nome: "M. Cardoso",
-            iniciais: "MC",
-            orgao: `SMS ${municipio.nomeMunicipio}`,
-          }}
+          usuario={{ nome: "M. Cardoso", iniciais: "MC", orgao: "SMS" }}
         />
       }
     >
+      <Suspense fallback={<PageContentSkeleton />}>
+        <AlertasContent municipioId={municipioId} />
+      </Suspense>
+    </PageShell>
+  );
+}
+
+type AlertasContentProps = {
+  municipioId: number;
+};
+
+async function AlertasContent({ municipioId }: AlertasContentProps) {
+  const [municipio, disponiveis] = await Promise.all([
+    getMunicipioResumo(municipioId),
+    getMunicipiosDisponiveis(),
+  ]);
+
+  if (!municipio) {
+    notFound();
+  }
+
+  return (
+    <>
       <DashboardHeader
         kicker="Alertas"
         title={municipio.nomeMunicipio}
@@ -73,6 +85,6 @@ export default async function AlertasPage({ params }: PageProps) {
           emptyMessage="Nenhuma regra de alerta implementada ainda para este município. A Visão Geral mostra CNES, produção e indicadores APS reais, mas a classificação de 'alerta' (ex.: CNES desatualizado, queda de produção) depende de regras de negócio que ainda não existem no dbt — ver notes/backlog.md."
         />
       </DashboardCard>
-    </PageShell>
+    </>
   );
 }

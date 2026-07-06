@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { PageShell } from "@/components/layout/page-shell";
+import { PageContentSkeleton } from "@/components/layout/page-content-skeleton";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { DashboardCard } from "@/components/layout/dashboard-card";
 import { MunicipioSelect } from "@/components/filters/municipio-select";
@@ -27,6 +29,31 @@ export default async function AtencaoPrimariaPage({ params }: PageProps) {
     notFound();
   }
 
+  return (
+    <PageShell
+      sidebar={
+        <AppSidebar
+          municipioId={String(municipioId)}
+          alertCount={0}
+          atualizacoes={[{ fonte: "SISAB", competencia: "2024Q3" }]}
+          usuario={{ nome: "M. Cardoso", iniciais: "MC", orgao: "SMS" }}
+        />
+      }
+    >
+      <Suspense fallback={<PageContentSkeleton />}>
+        <AtencaoPrimariaContent municipioId={municipioId} />
+      </Suspense>
+    </PageShell>
+  );
+}
+
+type AtencaoPrimariaContentProps = {
+  municipioId: number;
+};
+
+async function AtencaoPrimariaContent({
+  municipioId,
+}: AtencaoPrimariaContentProps) {
   const [municipio, disponiveis] = await Promise.all([
     getMunicipioResumo(municipioId),
     getMunicipiosDisponiveis(),
@@ -40,20 +67,7 @@ export default async function AtencaoPrimariaPage({ params }: PageProps) {
   const linhas = agruparPorIndicador(indicadoresPorVisao);
 
   return (
-    <PageShell
-      sidebar={
-        <AppSidebar
-          municipioId={String(municipioId)}
-          alertCount={0}
-          atualizacoes={[{ fonte: "SISAB", competencia: "2024Q3" }]}
-          usuario={{
-            nome: "M. Cardoso",
-            iniciais: "MC",
-            orgao: `SMS ${municipio.nomeMunicipio}`,
-          }}
-        />
-      }
-    >
+    <>
       <DashboardHeader
         kicker="Atenção Primária"
         title={municipio.nomeMunicipio}
@@ -86,7 +100,7 @@ export default async function AtencaoPrimariaPage({ params }: PageProps) {
       <p className="text-center font-mono text-[10.5px] text-text-tertiary">
         FONTES: SISAB — DADOS REAIS (raio-x-engenharia)
       </p>
-    </PageShell>
+    </>
   );
 }
 
