@@ -9,7 +9,7 @@ env_file := ".env"
 # VPS de deploy — ajuste antes de rodar `just deploy`.
 deploy_host := "usuario@seu-servidor"
 deploy_container := "raio-x-front"
-deploy_port := "3000"
+deploy_port := "3067"
 
 export DOCKER_BUILDKIT := "1"
 
