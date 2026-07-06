@@ -4,7 +4,7 @@
 
 image_name := "raio-x-front"
 image_tag := "latest"
-env_file := ".env.production"
+env_file := ".env"
 
 # VPS de deploy — ajuste antes de rodar `just deploy`.
 deploy_host := "usuario@seu-servidor"
@@ -38,12 +38,12 @@ build:
 
 # --- Docker / deploy ---
 
-# Build da imagem de produção — precisa de .env.production com POSTGRES_*
+# Build da imagem de produção — precisa de .env com POSTGRES_*
 # (rotas estáticas consultam o Postgres em build time; ver Dockerfile).
 # --network=host: testado neste projeto — o Postgres do raio-x-engenharia
 # é publicado só em 127.0.0.1 do host, inacessível pela rede bridge padrão
 # do Docker. Se o seu Postgres estiver em outro host/rede, troque por
-# POSTGRES_HOST real no .env.production e remova essa flag.
+# POSTGRES_HOST real no .env e remova essa flag.
 docker-build:
     docker build --network=host --secret id=env_production,src={{ env_file }} -t {{ image_name }}:{{ image_tag }} .
 
@@ -63,3 +63,19 @@ deploy: docker-build
 
 clean:
     rm -rf .next node_modules
+
+# --- Rebuild completo ---
+
+# Rebuild local: limpa .next/node_modules, reinstala e builda.
+# Credenciais vêm de .env (lido automaticamente pelo Next.js, sem export manual).
+rebuild-local: clean
+    npm install
+    npm run build
+
+# Rebuild da imagem Docker usando .env (ver env_file acima).
+rebuild-docker: docker-build
+
+# Rebuild do sistema inteiro: local (clean/install/build) + imagem Docker,
+# ambos usando .env. Não reinicia `just dev` nem reimplanta na VPS — rode
+# `just dev` ou `just deploy` depois, conforme o alvo.
+rebuild: rebuild-local rebuild-docker

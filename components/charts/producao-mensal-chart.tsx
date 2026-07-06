@@ -55,7 +55,7 @@ export function ProducaoMensalChart({ pontos }: ProducaoMensalChartProps) {
         </span>
       </div>
 
-      <div className="h-[180px]">
+      <div className="h-[180px]" style={{ height: 180 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={pontos} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--color-border-hairline)" />
