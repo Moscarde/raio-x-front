@@ -22,7 +22,7 @@ import {
   getTotalEstabelecimentosCnes,
 } from "@/lib/queries/estabelecimentos";
 import { getResumoInternacoes } from "@/lib/queries/internacoes";
-import { getProducaoMensal } from "@/lib/queries/producao-ambulatorial";
+import { getProducaoMensalOrEmpty } from "@/lib/queries/producao-ambulatorial";
 import { getIndicadoresAps } from "@/lib/queries/indicadores-aps";
 import type { MunicipioResumo } from "@/types/municipio";
 import type { ResumoInternacoes } from "@/types/internacao";
@@ -67,7 +67,7 @@ export default async function MunicipioVisaoGeralPage({ params }: PageProps) {
       getTotalEstabelecimentosCnes(municipioId),
       getEstabelecimentosPorTipo(municipioId),
       getResumoInternacoes(municipioId),
-      getProducaoMensal(municipioId),
+      getProducaoMensalOrEmpty(municipioId),
       getIndicadoresAps(municipioId),
     ]);
 

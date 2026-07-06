@@ -57,11 +57,9 @@ export function mapRowsToProducaoMensal(
 }
 
 /**
- * marts.fct_producao_ambulatorial tem 99,9M+ linhas (SIA, RJ inteiro) sem
- * pré-agregação por município no dbt ainda — filtrar+agrupar aqui leva
- * ~5,6s por município (medido para Paraty). `unstable_cache` evita repetir
- * essa varredura a cada carregamento de página; ver notes/backlog.md para
- * a proposta de mover essa agregação para uma mart dedicada.
+ * marts.mart_producao_ambulatorial_mensal_municipio já vem pré-agregada no
+ * dbt para evitar varrer fct_producao_ambulatorial (99,9M+ linhas) em tempo
+ * de request no frontend.
  *
  * `limit 12` no subselect garante uma janela móvel dos últimos 12 meses —
  * sem isso, a média cresceria diluída conforme mais competências forem
@@ -73,14 +71,13 @@ async function buscarProducaoMensal(
   const rows = await query<ProducaoMensalRow>(
     `select competencia_arquivo, quantidade_aprovada
      from (
-       select competencia_arquivo, sum(quantidade_aprovada) as quantidade_aprovada
-       from marts.fct_producao_ambulatorial
-       where id_municipio_estabelecimento = $1
-       group by 1
-       order by 1 desc
+       select competencia_arquivo, quantidade_aprovada
+       from marts.mart_producao_ambulatorial_mensal_municipio
+       where id_municipio = $1
+       order by competencia_arquivo desc
        limit $2
-     ) as ultimos_meses
-     order by competencia_arquivo asc`,
+      ) as ultimos_meses
+      order by competencia_arquivo asc`,
     [municipioId, MESES_JANELA],
   );
   return mapRowsToProducaoMensal(rows);
@@ -91,6 +88,23 @@ export const getProducaoMensal = unstable_cache(
   ["producao-mensal-por-municipio"],
   { revalidate: 60 * 60 * 24 },
 );
+
+export async function getProducaoMensalOrEmpty(
+  municipioId: number,
+): Promise<ProducaoMensalPoint[]> {
+  try {
+    return await getProducaoMensal(municipioId);
+  } catch (error) {
+    console.warn(
+      JSON.stringify({
+        event: "producao_mensal_query_failed",
+        municipioId,
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+    return [];
+  }
+}
 
 type ProducaoPorGrupoRow = {
   grupo: string;

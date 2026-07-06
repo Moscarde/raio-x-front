@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 
 export default function ErrorPage({
   error,
-  unstable_retry,
+  reset,
 }: {
   error: Error & { digest?: string };
-  unstable_retry: () => void;
+  reset: () => void;
 }) {
   useEffect(() => {
     console.error(
@@ -30,7 +30,7 @@ export default function ErrorPage({
         Não foi possível consultar o banco de dados agora. Tente novamente
         em alguns instantes.
       </p>
-      <Button variant="outline" onClick={() => unstable_retry()}>
+      <Button variant="outline" onClick={() => reset()}>
         Tentar novamente
       </Button>
     </div>
