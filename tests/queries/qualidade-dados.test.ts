@@ -47,9 +47,9 @@ describe("mapRowToQualidadeSisab", () => {
 });
 
 describe("mapRowToQualidadeSia", () => {
-  it("marca o total como estimativa (totalRegistrosAproximado)", () => {
-    const fonte = mapRowToQualidadeSia({ estimativa: "91742704" });
-    expect(fonte.totalRegistrosAproximado).toBe(true);
+  it("marca o total pré-agregado como contagem exata", () => {
+    const fonte = mapRowToQualidadeSia({ total: "91742704" });
+    expect(fonte.totalRegistrosAproximado).toBe(false);
     expect(fonte.totalRegistros).toBe(91742704);
   });
 });

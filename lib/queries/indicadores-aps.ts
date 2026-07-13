@@ -13,6 +13,9 @@ type IndicadorApsRow = {
   percentual_quadrimestre: string;
   populacao: string;
   quadrimestre: string;
+  parametro_percentual: string | null;
+  meta_percentual: string | null;
+  status_meta: "ok" | "atencao" | "critico" | null;
 };
 
 type IndicadorApsPorVisaoRow = {
@@ -22,6 +25,9 @@ type IndicadorApsPorVisaoRow = {
   percentual: string;
   numerador: string;
   denominador_utilizador: string;
+  parametro_percentual: string | null;
+  meta_percentual: string | null;
+  status_meta: "ok" | "atencao" | "critico" | null;
 };
 
 export function mapRowToIndicadorAps(row: IndicadorApsRow): IndicadorAps {
@@ -32,6 +38,9 @@ export function mapRowToIndicadorAps(row: IndicadorApsRow): IndicadorAps {
     percentualQuadrimestre: parseNumericColumn(row.percentual_quadrimestre),
     populacaoCoberta: parseNumericColumn(row.populacao),
     quadrimestre: row.quadrimestre,
+    parametroPercentual: parseNullableNumericColumn(row.parametro_percentual),
+    metaPercentual: parseNullableNumericColumn(row.meta_percentual),
+    statusMeta: row.status_meta,
   };
 }
 
@@ -45,7 +54,8 @@ export async function getIndicadoresAps(
   municipioId: number,
 ): Promise<IndicadorAps[]> {
   const rows = await query<IndicadorApsRow>(
-    `select numero_indicador, descricao_indicador, percentual, percentual_quadrimestre, populacao, quadrimestre
+    `select numero_indicador, descricao_indicador, percentual, percentual_quadrimestre, populacao, quadrimestre,
+            parametro_percentual, meta_percentual, status_meta
      from marts.mart_indicadores_aps
      where id_municipio = $1
        and visao_equipe = 'validas'
@@ -65,6 +75,9 @@ export function mapRowToIndicadorApsPorVisao(
     percentual: parseNumericColumn(row.percentual),
     numerador: parseNumericColumn(row.numerador),
     denominadorUtilizador: parseNumericColumn(row.denominador_utilizador),
+    parametroPercentual: parseNullableNumericColumn(row.parametro_percentual),
+    metaPercentual: parseNullableNumericColumn(row.meta_percentual),
+    statusMeta: row.status_meta,
   };
 }
 
@@ -77,11 +90,16 @@ export async function getIndicadoresApsPorVisao(
   municipioId: number,
 ): Promise<IndicadorApsPorVisao[]> {
   const rows = await query<IndicadorApsPorVisaoRow>(
-    `select numero_indicador, descricao_indicador, visao_equipe, percentual, numerador, denominador_utilizador
+    `select numero_indicador, descricao_indicador, visao_equipe, percentual, numerador, denominador_utilizador,
+            parametro_percentual, meta_percentual, status_meta
      from marts.mart_indicadores_aps
      where id_municipio = $1
      order by numero_indicador, visao_equipe`,
     [municipioId],
   );
   return rows.map(mapRowToIndicadorApsPorVisao);
+}
+
+function parseNullableNumericColumn(value: string | null): number | null {
+  return value === null ? null : parseNumericColumn(value);
 }

@@ -5,6 +5,7 @@ import { PageShell } from "@/components/layout/page-shell";
 import { PageContentSkeleton } from "@/components/layout/page-content-skeleton";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { DashboardCard } from "@/components/layout/dashboard-card";
+import { EquipesApsTable } from "@/components/tables/equipes-aps-table";
 import { MunicipioSelect } from "@/components/filters/municipio-select";
 import { formatPercent } from "@/lib/formatters/percent-format";
 import { parseMunicipioId } from "@/lib/validators/municipio-validator";
@@ -13,11 +14,19 @@ import {
   getMunicipiosDisponiveis,
 } from "@/lib/queries/municipios";
 import { getIndicadoresApsPorVisao } from "@/lib/queries/indicadores-aps";
-import type { IndicadorApsPorVisao } from "@/types/indicador-aps";
+import { getTotalAlertasAtivos } from "@/lib/queries/alertas";
+import {
+  getEquipesApsDetalhadas,
+  getTotalEquipesAps,
+} from "@/lib/queries/equipes-aps";
+import { StatusBadge, type StatusSeverity } from "@/components/alerts/status-badge";
+import type { IndicadorApsPorVisao, StatusMetaAps } from "@/types/indicador-aps";
 
 type PageProps = {
   params: Promise<{ municipioId: string }>;
 };
+
+const LIMITE_EQUIPES = 100;
 
 export default async function AtencaoPrimariaPage({ params }: PageProps) {
   const { municipioId: municipioIdParam } = await params;
@@ -29,12 +38,14 @@ export default async function AtencaoPrimariaPage({ params }: PageProps) {
     notFound();
   }
 
+  const alertCount = await getTotalAlertasAtivos(municipioId);
+
   return (
     <PageShell
       sidebar={
         <AppSidebar
           municipioId={String(municipioId)}
-          alertCount={0}
+          alertCount={alertCount}
           atualizacoes={[{ fonte: "SISAB", competencia: "2024Q3" }]}
           usuario={{ nome: "M. Cardoso", iniciais: "MC", orgao: "SMS" }}
         />
@@ -63,7 +74,11 @@ async function AtencaoPrimariaContent({
     notFound();
   }
 
-  const indicadoresPorVisao = await getIndicadoresApsPorVisao(municipioId);
+  const [indicadoresPorVisao, equipes, totalEquipes] = await Promise.all([
+    getIndicadoresApsPorVisao(municipioId),
+    getEquipesApsDetalhadas(municipioId, LIMITE_EQUIPES),
+    getTotalEquipesAps(municipioId),
+  ]);
   const linhas = agruparPorIndicador(indicadoresPorVisao);
 
   return (
@@ -90,10 +105,25 @@ async function AtencaoPrimariaContent({
           de financiamento do Previne Brasil; &ldquo;geral&rdquo; e
           &ldquo;homologadas&rdquo; existem na mesma base mas não são o
           número usado para pagamento (ver
-          lib/queries/indicadores-aps.ts). Metas oficiais por indicador
-          ainda não estão na camada de dados (ver notes/backlog.md). O
-          Previne Brasil foi extinto em 2024 — 2024Q3 é o último
+          lib/queries/indicadores-aps.ts). As metas e os status vêm das notas
+          técnicas oficiais do Previne Brasil. O Previne Brasil foi extinto em 2024 — 2024Q3 é o último
           quadrimestre disponível, não há série mais recente para comparar.
+        </p>
+      </DashboardCard>
+
+      <DashboardCard>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-text-primary">
+            Equipes e unidades de Atenção Primária
+          </span>
+          <span className="text-[11px] text-text-secondary">
+            Exibindo {equipes.length} de {totalEquipes}
+          </span>
+        </div>
+        <EquipesApsTable equipes={equipes} />
+        <p className="text-[11px] text-text-secondary">
+          A base informa a estrutura de equipe e unidade. Indicadores de
+          desempenho individual não são publicados nesse grão.
         </p>
       </DashboardCard>
 
@@ -110,6 +140,8 @@ type LinhaIndicador = {
   geral: number | null;
   homologadas: number | null;
   validas: number | null;
+  metaPercentual: number | null;
+  statusMeta: StatusMetaAps | null;
 };
 
 function agruparPorIndicador(
@@ -124,6 +156,8 @@ function agruparPorIndicador(
       geral: null,
       homologadas: null,
       validas: null,
+      metaPercentual: indicador.metaPercentual,
+      statusMeta: indicador.statusMeta,
     };
     linha[indicador.visaoEquipe] = indicador.percentual;
     porNumero.set(indicador.numeroIndicador, linha);
@@ -145,16 +179,18 @@ function IndicadoresPorVisaoTable({ linhas }: { linhas: LinhaIndicador[] }) {
 
   return (
     <div className="flex flex-col">
-      <div className="grid grid-cols-[2.4fr_1fr_1fr_1fr] gap-2 border-b border-border-hairline pb-2 font-mono text-[10px] font-semibold tracking-wide text-text-tertiary uppercase">
+      <div className="grid grid-cols-[2.4fr_0.8fr_0.8fr_0.8fr_0.8fr_1fr] gap-2 border-b border-border-hairline pb-2 font-mono text-[10px] font-semibold tracking-wide text-text-tertiary uppercase">
         <span>Indicador</span>
         <span className="text-right">Geral</span>
         <span className="text-right">Homologadas</span>
         <span className="text-right">Válidas</span>
+        <span className="text-right">Meta</span>
+        <span className="text-right">Status</span>
       </div>
       {linhas.map((linha) => (
         <div
           key={linha.numeroIndicador}
-          className="grid grid-cols-[2.4fr_1fr_1fr_1fr] items-center gap-2 border-b border-border-hairline py-2 text-[12.5px] text-text-primary last:border-0"
+          className="grid grid-cols-[2.4fr_0.8fr_0.8fr_0.8fr_0.8fr_1fr] items-center gap-2 border-b border-border-hairline py-2 text-[12.5px] text-text-primary last:border-0"
         >
           <span>{linha.descricaoIndicador}</span>
           <span className="text-right">
@@ -168,8 +204,31 @@ function IndicadoresPorVisaoTable({ linhas }: { linhas: LinhaIndicador[] }) {
           <span className="text-right font-display font-semibold">
             {linha.validas === null ? "—" : formatPercent(linha.validas, 0)}
           </span>
+          <span className="text-right">
+            {linha.metaPercentual === null
+              ? "—"
+              : formatPercent(linha.metaPercentual, 0)}
+          </span>
+          <span className="justify-self-end">
+            {linha.statusMeta ? (
+              <StatusBadge
+                status={getStatusSeverity(linha.statusMeta)}
+                label={getStatusLabel(linha.statusMeta)}
+              />
+            ) : (
+              "—"
+            )}
+          </span>
         </div>
       ))}
     </div>
   );
+}
+
+function getStatusSeverity(status: StatusMetaAps): StatusSeverity {
+  return status === "ok" ? "sucesso" : status;
+}
+
+function getStatusLabel(status: StatusMetaAps): string {
+  return status === "ok" ? "Meta atingida" : status === "atencao" ? "Atenção" : "Crítico";
 }

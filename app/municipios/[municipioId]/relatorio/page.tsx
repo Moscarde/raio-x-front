@@ -11,6 +11,7 @@ import {
   getMunicipioResumo,
   getMunicipiosDisponiveis,
 } from "@/lib/queries/municipios";
+import { getTotalAlertasAtivos } from "@/lib/queries/alertas";
 
 type PageProps = {
   params: Promise<{ municipioId: string }>;
@@ -26,12 +27,14 @@ export default async function RelatorioPage({ params }: PageProps) {
     notFound();
   }
 
+  const alertCount = await getTotalAlertasAtivos(municipioId);
+
   return (
     <PageShell
       sidebar={
         <AppSidebar
           municipioId={String(municipioId)}
-          alertCount={0}
+          alertCount={alertCount}
           atualizacoes={[]}
           usuario={{ nome: "M. Cardoso", iniciais: "MC", orgao: "SMS" }}
         />

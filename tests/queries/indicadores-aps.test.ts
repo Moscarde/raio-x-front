@@ -10,6 +10,9 @@ describe("mapRowToIndicadorAps", () => {
       percentual_quadrimestre: "54",
       populacao: "45243",
       quadrimestre: "2024Q3",
+      parametro_percentual: "80",
+      meta_percentual: "45",
+      status_meta: "atencao",
     });
 
     expect(indicador).toEqual({
@@ -19,6 +22,9 @@ describe("mapRowToIndicadorAps", () => {
       percentualQuadrimestre: 54,
       populacaoCoberta: 45243,
       quadrimestre: "2024Q3",
+      parametroPercentual: 80,
+      metaPercentual: 45,
+      statusMeta: "atencao",
     });
   });
 });

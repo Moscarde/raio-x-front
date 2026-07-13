@@ -12,6 +12,10 @@ import {
   getMunicipioResumo,
   getMunicipiosDisponiveis,
 } from "@/lib/queries/municipios";
+import {
+  getAlertasPrioritarios,
+  getTotalAlertasAtivos,
+} from "@/lib/queries/alertas";
 
 type PageProps = {
   params: Promise<{ municipioId: string }>;
@@ -27,12 +31,14 @@ export default async function AlertasPage({ params }: PageProps) {
     notFound();
   }
 
+  const alertCount = await getTotalAlertasAtivos(municipioId);
+
   return (
     <PageShell
       sidebar={
         <AppSidebar
           municipioId={String(municipioId)}
-          alertCount={0}
+          alertCount={alertCount}
           atualizacoes={[
             { fonte: "CNES", competencia: "dez/2025" },
             { fonte: "SISAB", competencia: "2024Q3" },
@@ -53,9 +59,10 @@ type AlertasContentProps = {
 };
 
 async function AlertasContent({ municipioId }: AlertasContentProps) {
-  const [municipio, disponiveis] = await Promise.all([
+  const [municipio, disponiveis, alertas] = await Promise.all([
     getMunicipioResumo(municipioId),
     getMunicipiosDisponiveis(),
+    getAlertasPrioritarios(municipioId),
   ]);
 
   if (!municipio) {
@@ -81,8 +88,8 @@ async function AlertasContent({ municipioId }: AlertasContentProps) {
           Todos os alertas
         </span>
         <AlertList
-          alertas={[]}
-          emptyMessage="Nenhuma regra de alerta implementada ainda para este município. A Visão Geral mostra CNES, produção e indicadores APS reais, mas a classificação de 'alerta' (ex.: CNES desatualizado, queda de produção) depende de regras de negócio que ainda não existem no dbt — ver notes/backlog.md."
+          alertas={alertas}
+          emptyMessage="Nenhum alerta ativo para este município na atualização mais recente."
         />
       </DashboardCard>
     </>

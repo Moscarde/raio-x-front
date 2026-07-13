@@ -9,6 +9,7 @@ import { DashboardCard } from "@/components/layout/dashboard-card";
 import { KpiCard } from "@/components/cards/kpi-card";
 import { RedeInstaladaBars } from "@/components/charts/rede-instalada-bars";
 import { EstabelecimentosTable } from "@/components/tables/estabelecimentos-table";
+import { UnidadesEncerradasTable } from "@/components/tables/unidades-encerradas-table";
 import { MunicipioSelect } from "@/components/filters/municipio-select";
 import { formatNumber } from "@/lib/formatters/number-format";
 import { parseMunicipioId } from "@/lib/validators/municipio-validator";
@@ -21,7 +22,10 @@ import {
   getEstabelecimentosPorTipo,
   getListaEstabelecimentos,
   getResumoRede,
+  getTotalUnidadesPossivelmenteEncerradas,
+  getUnidadesPossivelmenteEncerradas,
 } from "@/lib/queries/estabelecimentos";
+import { getTotalAlertasAtivos } from "@/lib/queries/alertas";
 
 const LIMITE_TABELA = 100;
 
@@ -39,12 +43,14 @@ export default async function RedeCnesPage({ params }: PageProps) {
     notFound();
   }
 
+  const alertCount = await getTotalAlertasAtivos(municipioId);
+
   return (
     <PageShell
       sidebar={
         <AppSidebar
           municipioId={String(municipioId)}
-          alertCount={0}
+          alertCount={alertCount}
           atualizacoes={[{ fonte: "CNES", competencia: "dez/2025" }]}
           usuario={{ nome: "M. Cardoso", iniciais: "MC", orgao: "SMS" }}
         />
@@ -71,11 +77,13 @@ async function RedeCnesContent({ municipioId }: RedeCnesContentProps) {
     notFound();
   }
 
-  const [resumoRede, porTipo, porNatureza, lista] = await Promise.all([
+  const [resumoRede, porTipo, porNatureza, lista, totalPossivelmenteEncerradas, possivelmenteEncerradas] = await Promise.all([
     getResumoRede(municipioId),
     getEstabelecimentosPorTipo(municipioId, 10),
     getEstabelecimentosPorNaturezaJuridica(municipioId, 8),
     getListaEstabelecimentos(municipioId, LIMITE_TABELA),
+    getTotalUnidadesPossivelmenteEncerradas(municipioId),
+    getUnidadesPossivelmenteEncerradas(municipioId, LIMITE_TABELA),
   ]);
 
   return (
@@ -92,7 +100,7 @@ async function RedeCnesContent({ municipioId }: RedeCnesContentProps) {
         }
       />
 
-      <ContentGrid className="grid-cols-3">
+      <ContentGrid className="grid-cols-4">
         <KpiCard
           label="Estabelecimentos cadastrados"
           value={formatNumber(resumoRede.totalEstabelecimentos)}
@@ -104,6 +112,11 @@ async function RedeCnesContent({ municipioId }: RedeCnesContentProps) {
         <KpiCard
           label="Tipos de unidade distintos"
           value={formatNumber(resumoRede.tiposDistintos)}
+        />
+        <KpiCard
+          label="Possivelmente encerradas"
+          value={formatNumber(totalPossivelmenteEncerradas)}
+          trendLabel="Ausentes da competência CNES mais recente"
         />
       </ContentGrid>
 
@@ -136,11 +149,23 @@ async function RedeCnesContent({ municipioId }: RedeCnesContentProps) {
         <EstabelecimentosTable estabelecimentos={lista} />
       </DashboardCard>
 
+      <DashboardCard>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-text-primary">
+            Auditoria de unidades possivelmente encerradas
+          </span>
+          <span className="text-[11px] text-text-secondary">
+            Exibindo {formatNumber(possivelmenteEncerradas.length)} de{" "}
+            {formatNumber(totalPossivelmenteEncerradas)}
+          </span>
+        </div>
+        <UnidadesEncerradasTable unidades={possivelmenteEncerradas} />
+      </DashboardCard>
+
       <p className="text-[11px] text-text-secondary">
-        Fonte: CNES, competência única carregada (dezembro/2025) — sem série
-        histórica, não é possível ver abertura/fechamento de unidades ao
-        longo do tempo. Não há campo de situação (ativo/inativo) na mart,
-        nem nome do estabelecimento — só o código CNES.
+        Fonte: CNES, competências de janeiro a dezembro/2025. &ldquo;Possivelmente
+        encerrada&rdquo; indica ausência da última competência carregada; é um
+        sinal para auditoria, não confirmação de encerramento.
       </p>
 
       <p className="text-center font-mono text-[10.5px] text-text-tertiary">

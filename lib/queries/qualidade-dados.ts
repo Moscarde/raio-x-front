@@ -88,31 +88,22 @@ async function buscarQualidadeSisab(): Promise<QualidadeFonte> {
   return mapRowToQualidadeSisab(rows[0] ?? { total: "0", municipios: "0" });
 }
 
-export function mapRowToQualidadeSia(row: { estimativa: string }): QualidadeFonte {
+export function mapRowToQualidadeSia(row: { total: string }): QualidadeFonte {
   return {
     fonte: "SIA",
-    totalRegistros: parseNumericColumn(row.estimativa),
-    totalRegistrosAproximado: true,
+    totalRegistros: parseNumericColumn(row.total),
+    totalRegistrosAproximado: false,
     municipiosCobertos: 3,
     periodoReferencia: "jan/2025 a dez/2025 (12 competências, RJ inteiro)",
   };
 }
 
-/**
- * marts.fct_producao_ambulatorial tem 99,9M+ linhas — um `count(*)` ou
- * `count(distinct competencia_arquivo)` sem filtro de município mede
- * ~58s (medido direto no Postgres). Usa a estimativa de `pg_class`
- * (sub-10ms) em vez de escanear a tabela inteira; o período de referência
- * é um fato estático documentado no ROADMAP.md do raio-x-engenharia, não
- * uma consulta ao vivo.
- */
 async function buscarQualidadeSia(): Promise<QualidadeFonte> {
-  const rows = await query<{ estimativa: string }>(
-    `select reltuples::bigint as estimativa
-     from pg_class
-     where relname = 'fct_producao_ambulatorial'`,
+  const rows = await query<{ total: string }>(
+    `select coalesce(sum(quantidade_registros), 0)::text as total
+     from marts.mart_producao_grupo_municipio`,
   );
-  return mapRowToQualidadeSia(rows[0] ?? { estimativa: "0" });
+  return mapRowToQualidadeSia(rows[0] ?? { total: "0" });
 }
 
 async function buscarQualidadeDados(): Promise<QualidadeFonte[]> {

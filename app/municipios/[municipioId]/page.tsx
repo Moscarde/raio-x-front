@@ -26,6 +26,10 @@ import {
 import { getResumoInternacoes } from "@/lib/queries/internacoes";
 import { getProducaoMensalOrEmpty } from "@/lib/queries/producao-ambulatorial";
 import { getIndicadoresAps } from "@/lib/queries/indicadores-aps";
+import {
+  getAlertasPrioritarios,
+  getTotalAlertasAtivos,
+} from "@/lib/queries/alertas";
 import type { MunicipioResumo } from "@/types/municipio";
 import type { ResumoInternacoes } from "@/types/internacao";
 import type { ProducaoMensalPoint } from "@/types/producao-ambulatorial";
@@ -44,12 +48,14 @@ export default async function MunicipioVisaoGeralPage({ params }: PageProps) {
     notFound();
   }
 
+  const alertCount = await getTotalAlertasAtivos(municipioId);
+
   return (
     <PageShell
       sidebar={
         <AppSidebar
           municipioId={String(municipioId)}
-          alertCount={0}
+          alertCount={alertCount}
           atualizacoes={[
             { fonte: "CNES", competencia: "dez/2025" },
             { fonte: "SISAB", competencia: "2024Q3" },
@@ -90,13 +96,14 @@ async function VisaoGeralContent({ municipioId }: VisaoGeralContentProps) {
     );
   }
 
-  const [totalCnes, estabelecimentosPorTipo, internacoes, producaoMensal, indicadoresAps] =
+  const [totalCnes, estabelecimentosPorTipo, internacoes, producaoMensal, indicadoresAps, alertas] =
     await Promise.all([
       getTotalEstabelecimentosCnes(municipioId),
       getEstabelecimentosPorTipo(municipioId),
       getResumoInternacoes(municipioId),
       getProducaoMensalOrEmpty(municipioId),
       getIndicadoresAps(municipioId),
+      getAlertasPrioritarios(municipioId, 4),
     ]);
 
   return (
@@ -152,8 +159,7 @@ async function VisaoGeralContent({ municipioId }: VisaoGeralContentProps) {
             </Link>
           </div>
           <AlertList
-            alertas={[]}
-            emptyMessage="Nenhuma regra de alerta implementada ainda para este município (ver notes/backlog.md)."
+            alertas={alertas}
           />
         </DashboardCard>
       </ContentGrid>
@@ -173,9 +179,8 @@ async function VisaoGeralContent({ municipioId }: VisaoGeralContentProps) {
           </span>
           <IndicadoresApsTable indicadores={indicadoresAps} />
           <p className="text-[11px] text-text-secondary">
-            Metas oficiais por indicador ainda não estão na camada de dados
-            — coluna de status foi omitida em vez de usar um limiar
-            inventado (ver notes/backlog.md).
+            Metas e status seguem parâmetros oficiais do Previne Brasil
+            publicados pelo Ministério da Saúde.
           </p>
         </DashboardCard>
       </ContentGrid>

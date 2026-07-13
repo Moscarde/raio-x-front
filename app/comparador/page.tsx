@@ -11,6 +11,7 @@ import { getTotalEstabelecimentosCnes } from "@/lib/queries/estabelecimentos";
 import { getResumoInternacoes } from "@/lib/queries/internacoes";
 import { getProducaoMensalOrEmpty } from "@/lib/queries/producao-ambulatorial";
 import { getIndicadoresAps } from "@/lib/queries/indicadores-aps";
+import { getTotalAlertasAtivos } from "@/lib/queries/alertas";
 import type { MunicipioResumo } from "@/types/municipio";
 import type { ResumoInternacoes } from "@/types/internacao";
 import type { IndicadorAps } from "@/types/indicador-aps";
@@ -45,13 +46,15 @@ async function buscarLinhaComparativa(
 
 export default async function ComparadorPage() {
   const municipios = await getMunicipiosDisponiveis();
+  const municipioId = municipios[0]?.municipioId;
+  const alertCount = municipioId ? await getTotalAlertasAtivos(municipioId) : 0;
 
   return (
     <PageShell
       sidebar={
         <AppSidebar
-          municipioId={String(municipios[0]?.municipioId ?? "")}
-          alertCount={0}
+          municipioId={String(municipioId ?? "")}
+          alertCount={alertCount}
           atualizacoes={[
             { fonte: "CNES", competencia: "dez/2025" },
             { fonte: "SISAB", competencia: "2024Q3" },

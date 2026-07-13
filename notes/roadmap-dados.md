@@ -34,7 +34,7 @@ banco. Corrigido:
   o rodapé de `app/municipios/[municipioId]/producao/page.tsx` e
   `tests/queries/producao-por-grupo.test.ts` atualizados de acordo.
 
-## Fase 1 — Alertas priorizados (`marts.mart_alertas_saude`)
+## Fase 1 — Alertas priorizados (`marts.mart_alertas_saude`) ✅ concluída em 2026-07-13
 
 Hoje `app/municipios/[municipioId]/alertas/page.tsx` é 100% estático
 (`alertas={[]}`, com texto explicando que nenhuma regra existe ainda). A
@@ -57,7 +57,7 @@ full-refresh sem histórico de execuções).
   a busca de `alertCount` (elimina duplicação em 7 arquivos), mas não é
   obrigatório para a fase — pode ficar como refactor incremental.
 
-## Fase 2 — Metas oficiais do Previne Brasil (`mart_indicadores_aps.status_meta`)
+## Fase 2 — Metas oficiais do Previne Brasil (`mart_indicadores_aps.status_meta`) ✅ concluída em 2026-07-13
 
 `lib/queries/indicadores-aps.ts` já consulta essa mart mas não seleciona as
 3 colunas novas: `parametro_percentual`, `meta_percentual`, `status_meta`
@@ -71,7 +71,7 @@ full-refresh sem histórico de execuções).
 - Mesmo dado pode enriquecer `IndicadoresComparativoTable` no Comparador.
 - Menor esforço de todo o roadmap — bom segundo passo depois dos Alertas.
 
-## Fase 3 — Rede CNES: histórico + cadastro detalhado (`mart_historico_rede_cnes` + `dim_estabelecimento` enriquecida via DEMAS)
+## Fase 3 — Rede CNES: histórico + cadastro detalhado (`mart_historico_rede_cnes` + `dim_estabelecimento` enriquecida via DEMAS) ✅ concluída em 2026-07-13
 
 `app/municipios/[municipioId]/rede-cnes/page.tsx` afirma hoje, no rodapé:
 "sem série histórica... não há campo de situação... nem nome do
@@ -117,7 +117,7 @@ permanência média — `types/internacao.ts` não tem nenhum campo de ICSAP.
   ressalva na UI, no mesmo padrão de nota de limitação já usado em
   `atencao-primaria/page.tsx`.
 
-## Fase 6 — Detalhamento da APS por equipe/unidade (`mart_equipe_aps_detalhada`)
+## Fase 6 — Detalhamento da APS por equipe/unidade (`mart_equipe_aps_detalhada`) ✅ concluída em 2026-07-13
 
 1.659 linhas (equipe × unidade, com nome/endereço/bairro da unidade via
 `dim_estabelecimento` e área/segmento de atuação da equipe). Nenhuma tela
@@ -174,7 +174,7 @@ Produção, Alertas, Comparador, Relatório IA).
   bom momento para trazer as 3 juntas nesta fase, já que cobrem a mesma
   pergunta de produto ("de onde vem o dinheiro da saúde do município").
 
-## Fase 9 — Qualidade de dados: contagem exata da fonte SIA
+## Fase 9 — Qualidade de dados: contagem exata da fonte SIA ✅ concluída em 2026-07-13
 
 `app/qualidade-dados` usa `pg_class.reltuples` (estimativa) para o total de
 registros da fonte SIA. Com `mart_producao_grupo_municipio` existindo

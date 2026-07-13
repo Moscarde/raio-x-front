@@ -31,10 +31,8 @@ export default async function QualidadeDadosPage() {
         </span>
         <QualidadeFontesTable fontes={fontes} />
         <p className="text-[11px] text-text-secondary">
-          &ldquo;≈&rdquo; indica estimativa via estatísticas do Postgres
-          (<code>pg_class.reltuples</code>), usada só para a fonte SIA — a
-          tabela tem 99,9M+ linhas e um <code>count(*)</code> exato mede
-          ~58s. As demais fontes mostram contagem exata.
+          Todas as fontes mostram contagens exatas. O total da SIA é somado
+          da mart pré-agregada por município, competência e grupo SIGTAP.
         </p>
       </div>
 
