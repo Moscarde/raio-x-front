@@ -25,6 +25,14 @@ setup:
     @echo "Preencha .env.local com as credenciais reais do Postgres (nunca versionar)."
 
 dev:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Next.js 16 exige Node >=20.9 — usa o Node 20 do nvm se disponível
+    # (system node pode estar preso numa versão mais velha via apt/distro).
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+        . "$HOME/.nvm/nvm.sh"
+        nvm use 20 > /dev/null
+    fi
     npm run dev
 
 # tsc + lint + testes — rodar antes de build/deploy

@@ -130,49 +130,74 @@ consome.
   única fonte de indicador publica por tipo de equipe agregado ao
   município, não por `id_equipe` individual) — só atributos estruturais.
 
-## Fase 7 — Comparador real entre municípios do RJ (`mart_comparacao_municipios_rj`)
+## Fase 7 — Comparador real entre municípios do RJ (`mart_comparacao_municipios_rj`) ✅ concluída em 2026-07-13
 
-`app/comparador/page.tsx` hoje compara só os 3 municípios com dado
-carregado, direto, sem pareamento — o próprio código (`ResumoComparativoTable`)
-documenta isso como decisão temporária até a mart existir. Ela existe agora:
-92 municípios do RJ, com população estimada e porte de rede
-(`estabelecimentos_por_10k_habitantes`), com `municipio_referencia`
-marcando quais são os 3 do MVP.
+`app/comparador/page.tsx` reescrito seguindo o mockup em
+`reference/paginas.md` (linhas 43-79): seleção livre de município principal
+entre os 92 do RJ, seletor de critério de pareamento (população mais
+próxima / porte de rede mais próximo / mesma microrregião), chips do
+município principal + pares + "+ Adicionar município" (extras manuais via
+`?extra=`), 3 KPIs (posição por porte de rede, ponto forte, ponto de
+atenção — calculados contra a média dos pares, não dos 92), tabela
+indicadores lado a lado com badge de posição por linha, 2 gráficos de barra
+horizontal (porte de rede e produção per capita) com anotação de outlier.
 
-- Fase de maior esforço de UX do roadmap: precisa decidir ranking? busca
-  entre 92? scatter população × porte de rede? — os indicadores de
-  desempenho (SISAB/ICSAP/financiamento) continuam restritos aos 3
-  municípios de referência, então a comparação "profunda" de hoje não
-  escala para os 92 sem essa decisão de produto. Checar
-  `reference/paginas.md` (mockup do Comparador já existe) antes de
-  implementar.
-- Nova `lib/queries/comparacao-municipios.ts` + tipo novo.
+- `mart_producao_grupo_municipio` cobre o estado inteiro (SIA mudou de
+  escopo em 2026-07-04) — deu pra calcular produção ambulatorial per capita
+  pros 92 municípios, não só os 3 de referência, então os gráficos e o KPI
+  de ranking funcionam pra qualquer município selecionado.
+- Cobertura APS e ICSAP continuam restritos aos 3 municípios de referência
+  (dado real só existe pra eles) — a tabela mostra "—" pros demais 89, e
+  ponto forte/ponto fraco só consideram indicadores com dado disponível
+  pro município principal.
+- Nova `lib/queries/comparacao-municipios.ts` (query + pareamento + ranking
+  + destaques, todas funções puras testadas em
+  `tests/queries/comparacao-municipios.test.ts`), `types/comparacao-municipio.ts`,
+  `components/filters/municipio-comparador-select.tsx`,
+  `components/filters/criterio-pareamento-select.tsx`,
+  `components/filters/comparacao-municipios-chips.tsx`,
+  `components/tables/comparacao-indicadores-table.tsx`,
+  `components/charts/comparacao-barra-horizontal.tsx`.
+- Não implementado: exportação da comparação (CTA fica desabilitado, como
+  o botão de relatório executivo na Visão Geral) e a tabela comparativa de
+  indicadores Previne Brasil por visão de equipe que existia na versão
+  anterior da página (não fazia sentido pro modelo de pareamento entre 92
+  municípios — SISAB só cobre os 3 refs).
 
-## Fase 8 — Financiamento municipal (`mart_financiamento_saude_uniao` + `mart_financiamento_saude_siops` + `mart_repasses_fns`)
+## Fase 8 — Financiamento municipal (`mart_financiamento_saude_uniao` + `mart_financiamento_saude_siops` + `mart_repasses_fns`) ✅ concluída em 2026-07-13
 
-Única das 11 demandas sem nenhum consumo prévio, nem parcial — não existe
-query nem página de financiamento hoje. `reference/paginas.md` não lista
-essa tela no inventário atual (Visão geral, Rede e CNES, Atenção Primária,
-Produção, Alertas, Comparador, Relatório IA).
+Página nova `app/municipios/[municipioId]/financiamento/page.tsx` + item de
+sidebar "Financiamento" (entre Produção e Alertas), construída direto a
+partir de `reference/design-system.md` — mesmo padrão de "rodada de design
+pulada" já usado em Rede e CNES/Atenção Primária/Produção.
 
-- Decisão de produto: página nova + item de sidebar "Financiamento" (não
-  seção dentro de tela existente). Como não há mockup específico em
-  `reference/`, validar o layout contra `reference/design-system.md` antes
-  de construir — mesmo padrão já usado quando "rodada de design foi pulada
-  por decisão explícita" em Rede e CNES/Atenção Primária/Produção
-  (registrado em `notes/backlog.md`).
-- Nova `lib/queries/financiamento.ts`, novo tipo, nova rota
-  `app/municipios/[municipioId]/financiamento/page.tsx`, novo item em
-  `components/layout/app-sidebar.tsx`.
-- Cuidado de proveniência: `mart_financiamento_saude_uniao` já normaliza o
-  sinal do `valor` (FNS reporta débito com valor sempre positivo + flag
-  separada; Portal da Transparência já usa sinal negativo para
-  estorno/devolução) — não resomar as fontes sem essa normalização, ela já
-  vem pronta da mart.
-- `mart_financiamento_saude_siops` e `mart_repasses_fns` existem desde
-  antes desta leva de marts mas também não têm consumo no frontend hoje —
-  bom momento para trazer as 3 juntas nesta fase, já que cobrem a mesma
-  pergunta de produto ("de onde vem o dinheiro da saúde do município").
+- 4 KPIs: % aplicado em saúde vs. mínimo constitucional (LC 141/2012, badge
+  ok/crítico — mesma conta `AplicacaoTotalDasDespesasComAcoesEServicosPublicosDeSaude`
+  que a regra de alerta `siops_abaixo_minimo` usa), valor apurado em saúde,
+  saldo líquido de repasses federais (mesma métrica da regra de alerta
+  `financiamento_liquido_negativo` — confirmado batendo com a evidência do
+  alerta ativo do Rio: R$ -60.774,46), receita corrente realizada
+  (contexto). Card de repasses por fonte (FNS Fundo a Fundo × Portal da
+  Transparência) e tabela de lançamentos (limite 20, mais recentes
+  primeiro).
+- `mart_financiamento_saude_siops` é EAV (`codigo_conta` × `coluna` →
+  `valor`, um RREO Anexo 14 inteiro por linha) — `lib/queries/financiamento.ts`
+  pivota só as contas usadas via `filter (where ...)`, não expõe o EAV cru
+  pro frontend.
+- `mart_repasses_fns` **não** foi trazida separadamente, ao contrário do
+  que a Fase 8 original cogitava — investigação mostrou que ela é o mesmo
+  dado bruto do FNS já incorporado (com sinal normalizado) em
+  `mart_financiamento_saude_uniao` (`fonte = 'fns_fundo_a_fundo'`); somar
+  as duas contaria o mesmo lançamento em dobro. Registrado no rodapé da
+  página.
+- Verificado end-to-end com Node 20 (`nvm use 20` — Node 18 do sistema não
+  roda `next dev`/`vitest`, ver seção de ambiente): valores batendo
+  exatamente com a mart (Rio: R$ 3.927.364.651 apurado, R$ 46.534.521.782
+  receita realizada, 17,0% aplicado), Paraty 15,9%, Nova Iguaçu 15,6% —
+  nenhum dos 3 abaixo do mínimo hoje, consistente com não haver alerta
+  `siops_abaixo_minimo` ativo pra nenhum deles.
+- Novo `types/financiamento.ts`, `components/tables/lancamentos-repasses-table.tsx`,
+  testes em `tests/queries/financiamento.test.ts`.
 
 ## Fase 9 — Qualidade de dados: contagem exata da fonte SIA ✅ concluída em 2026-07-13
 

@@ -23,16 +23,18 @@ import {
   getEstabelecimentosPorTipo,
   getTotalEstabelecimentosCnes,
 } from "@/lib/queries/estabelecimentos";
-import { getResumoInternacoes } from "@/lib/queries/internacoes";
+import { getIcsapMunicipio, getResumoInternacoes } from "@/lib/queries/internacoes";
 import { getProducaoMensalOrEmpty } from "@/lib/queries/producao-ambulatorial";
 import { getIndicadoresAps } from "@/lib/queries/indicadores-aps";
+import { getCoberturaAps } from "@/lib/queries/cobertura-aps";
 import {
   getAlertasPrioritarios,
   getTotalAlertasAtivos,
 } from "@/lib/queries/alertas";
 import type { MunicipioResumo } from "@/types/municipio";
-import type { ResumoInternacoes } from "@/types/internacao";
+import type { IndicadorIcsap, ResumoInternacoes } from "@/types/internacao";
 import type { ProducaoMensalPoint } from "@/types/producao-ambulatorial";
+import type { CoberturaApsMunicipio } from "@/types/cobertura-aps";
 
 type PageProps = {
   params: Promise<{ municipioId: string }>;
@@ -96,15 +98,25 @@ async function VisaoGeralContent({ municipioId }: VisaoGeralContentProps) {
     );
   }
 
-  const [totalCnes, estabelecimentosPorTipo, internacoes, producaoMensal, indicadoresAps, alertas] =
-    await Promise.all([
-      getTotalEstabelecimentosCnes(municipioId),
-      getEstabelecimentosPorTipo(municipioId),
-      getResumoInternacoes(municipioId),
-      getProducaoMensalOrEmpty(municipioId),
-      getIndicadoresAps(municipioId),
-      getAlertasPrioritarios(municipioId, 4),
-    ]);
+  const [
+    totalCnes,
+    estabelecimentosPorTipo,
+    internacoes,
+    icsap,
+    coberturaAps,
+    producaoMensal,
+    indicadoresAps,
+    alertas,
+  ] = await Promise.all([
+    getTotalEstabelecimentosCnes(municipioId),
+    getEstabelecimentosPorTipo(municipioId),
+    getResumoInternacoes(municipioId),
+    getIcsapMunicipio(municipioId),
+    getCoberturaAps(municipioId),
+    getProducaoMensalOrEmpty(municipioId),
+    getIndicadoresAps(municipioId),
+    getAlertasPrioritarios(municipioId, 4),
+  ]);
 
   return (
     <>
@@ -135,8 +147,18 @@ async function VisaoGeralContent({ municipioId }: VisaoGeralContentProps) {
       <VisaoGeralKpis
         totalCnes={totalCnes}
         internacoes={internacoes}
+        icsap={icsap}
+        coberturaAps={coberturaAps}
         producaoMensal={producaoMensal}
       />
+      {icsap ? (
+        <p className="text-[11px] text-text-secondary">
+          ICSAP: grão é município de residência do paciente, ano{" "}
+          {icsap.ano}. Denominador é o total de internações — a
+          metodologia oficial completa restringe a internações clínicas,
+          recorte que o SIH ainda não permite reproduzir integralmente.
+        </p>
+      ) : null}
 
       <ContentGrid className="grid-cols-[1.5fr_1fr]">
         <DashboardCard>
@@ -228,27 +250,47 @@ function MunicipioSemDadosReais({
 type VisaoGeralKpisProps = {
   totalCnes: number;
   internacoes: ResumoInternacoes;
+  icsap: IndicadorIcsap | null;
+  coberturaAps: CoberturaApsMunicipio | null;
   producaoMensal: ProducaoMensalPoint[];
 };
 
 function VisaoGeralKpis({
   totalCnes,
   internacoes,
+  icsap,
+  coberturaAps,
   producaoMensal,
 }: VisaoGeralKpisProps) {
   const ultimoPonto = producaoMensal.at(-1);
   const deltaProducao = calcularDeltaProducao(ultimoPonto);
 
   return (
-    <ContentGrid className="grid-cols-5">
-      <KpiCardPendente
-        label="Cobertura APS"
-        nota="Indicador de cobertura populacional pela APS ainda não disponível nesta camada de dados."
-      />
-      <KpiCardPendente
-        label="Equipes ESF"
-        nota="Cadastro de equipes de saúde da família ainda não carregado."
-      />
+    <ContentGrid className="grid-cols-6">
+      {coberturaAps ? (
+        <KpiCard
+          label="Cobertura APS (ESF)"
+          value={formatPercent(coberturaAps.percentualCoberturaEsf, 1)}
+          trendLabel={`Cadastro vinculado · ${coberturaAps.anoReferenciaPopulacao}`}
+        />
+      ) : (
+        <KpiCardPendente
+          label="Cobertura APS"
+          nota="Indicador de cobertura populacional pela APS ainda não disponível para este município."
+        />
+      )}
+      {coberturaAps ? (
+        <KpiCard
+          label="Equipes ESF ativas"
+          value={formatNumber(coberturaAps.quantidadeEquipesEsfAtivas)}
+          trendLabel={`Cadastro CNES · ${coberturaAps.competenciaEquipesCnes}`}
+        />
+      ) : (
+        <KpiCardPendente
+          label="Equipes ESF"
+          nota="Cadastro de equipes de saúde da família ainda não carregado para este município."
+        />
+      )}
       <KpiCard
         label="Unidades CNES"
         value={formatNumber(totalCnes)}
@@ -272,6 +314,19 @@ function VisaoGeralKpis({
             : undefined
         }
       />
+      {icsap ? (
+        <KpiCard
+          label="Internações ICSAP"
+          value={formatPercent(icsap.percentualIcsap, 1)}
+          trend={icsap.percentualIcsap >= 20 ? "atencao" : "neutro"}
+          trendLabel={`Residentes · ${icsap.ano}`}
+        />
+      ) : (
+        <KpiCardPendente
+          label="Internações ICSAP"
+          nota="Indicador de internações por condições sensíveis à APS ainda não disponível para este município."
+        />
+      )}
     </ContentGrid>
   );
 }

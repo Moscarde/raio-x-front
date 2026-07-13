@@ -18,6 +18,7 @@ function buildNavItems(municipioId: string, alertCount: number): SidebarNavItem[
     { label: "Rede e CNES", href: `${base}/rede-cnes` },
     { label: "Atenção Primária", href: `${base}/atencao-primaria` },
     { label: "Produção", href: `${base}/producao` },
+    { label: "Financiamento", href: `${base}/financiamento` },
     { label: "Alertas", href: `${base}/alertas`, alertCount },
     { label: "Comparador", href: "/comparador" },
     { label: "Relatório IA", href: `${base}/relatorio` },
