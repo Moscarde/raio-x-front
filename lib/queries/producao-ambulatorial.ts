@@ -57,9 +57,12 @@ export function mapRowsToProducaoMensal(
 }
 
 /**
- * marts.mart_producao_ambulatorial_mensal_municipio já vem pré-agregada no
- * dbt para evitar varrer fct_producao_ambulatorial (99,9M+ linhas) em tempo
- * de request no frontend.
+ * marts.mart_producao_grupo_municipio já vem pré-agregada no dbt (grão
+ * município × competência × grupo SIGTAP) para evitar varrer
+ * fct_producao_ambulatorial (99,9M+ linhas) em tempo de request no
+ * frontend — somamos os grupos aqui para obter o total por competência.
+ * `to_char` converte `competencia_date` (DATE) de volta pro formato
+ * "AAAAMM" que `formatCompetencia` espera, preservando o contrato do tipo.
  *
  * `limit 12` no subselect garante uma janela móvel dos últimos 12 meses —
  * sem isso, a média cresceria diluída conforme mais competências forem
@@ -69,15 +72,16 @@ async function buscarProducaoMensal(
   municipioId: number,
 ): Promise<ProducaoMensalPoint[]> {
   const rows = await query<ProducaoMensalRow>(
-    `select competencia_arquivo, quantidade_aprovada
+    `select to_char(competencia_date, 'YYYYMM') as competencia_arquivo, quantidade_aprovada
      from (
-       select competencia_arquivo, quantidade_aprovada
-       from marts.mart_producao_ambulatorial_mensal_municipio
+       select competencia_date, sum(quantidade_aprovada) as quantidade_aprovada
+       from marts.mart_producao_grupo_municipio
        where id_municipio = $1
-       order by competencia_arquivo desc
+       group by competencia_date
+       order by competencia_date desc
        limit $2
       ) as ultimos_meses
-      order by competencia_arquivo asc`,
+      order by competencia_date asc`,
     [municipioId, MESES_JANELA],
   );
   return mapRowsToProducaoMensal(rows);
@@ -107,7 +111,8 @@ export async function getProducaoMensalOrEmpty(
 }
 
 type ProducaoPorGrupoRow = {
-  grupo: string;
+  codigo_grupo: string;
+  descricao_grupo: string;
   quantidade_aprovada: string;
   valor_aprovado: string;
 };
@@ -116,29 +121,31 @@ export function mapRowToProducaoPorGrupo(
   row: ProducaoPorGrupoRow,
 ): ProducaoPorGrupo {
   return {
-    grupoProcedimento: row.grupo,
+    grupoProcedimento: row.codigo_grupo,
+    descricaoGrupo: row.descricao_grupo,
     quantidadeAprovada: parseNumericColumn(row.quantidade_aprovada),
     valorAprovado: parseNumericColumn(row.valor_aprovado),
   };
 }
 
 /**
- * Mesma tabela de 99,9M+ linhas de buscarProducaoMensal (~5,8s medido) —
- * cacheada pelo mesmo motivo. Os 2 primeiros dígitos do código SIGTAP
- * identificam o grupo de procedimento; não há seed de-para para nome
- * legível ainda (ver notes/backlog.md).
+ * marts.mart_producao_grupo_municipio já vem pré-agregada por grupo SIGTAP
+ * (evita varrer fct_producao_ambulatorial, 99,9M+ linhas, em tempo de
+ * request) e já traz `descricao_grupo` legível via seed_sigtap_grupo do
+ * dbt — sem necessidade de de-para no frontend.
  */
 async function buscarProducaoPorGrupo(
   municipioId: number,
 ): Promise<ProducaoPorGrupo[]> {
   const rows = await query<ProducaoPorGrupoRow>(
     `select
-       left(codigo_procedimento, 2) as grupo,
+       codigo_grupo,
+       descricao_grupo,
        sum(quantidade_aprovada) as quantidade_aprovada,
        sum(valor_aprovado) as valor_aprovado
-     from marts.fct_producao_ambulatorial
-     where id_municipio_estabelecimento = $1
-     group by 1
+     from marts.mart_producao_grupo_municipio
+     where id_municipio = $1
+     group by codigo_grupo, descricao_grupo
      order by valor_aprovado desc
      limit $2`,
     [municipioId, GRUPOS_JANELA],

@@ -21,8 +21,11 @@ export function ProducaoPorGrupoBars({ itens }: ProducaoPorGrupoBarsProps) {
       {itens.map((item) => (
         <div key={item.grupoProcedimento} className="flex flex-col gap-1">
           <div className="flex items-center justify-between gap-2 text-xs text-text-primary">
-            <span className="font-mono">
-              Grupo {item.grupoProcedimento} (SIGTAP)
+            <span>
+              {item.descricaoGrupo}
+              <span className="ml-1 font-mono text-text-tertiary">
+                ({item.grupoProcedimento})
+              </span>
             </span>
             <span className="font-display font-semibold">
               {formatCurrency(item.valorAprovado)}

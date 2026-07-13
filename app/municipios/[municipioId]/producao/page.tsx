@@ -120,10 +120,9 @@ async function ProducaoContent({ municipioId }: ProducaoContentProps) {
         </span>
         <ProducaoPorGrupoBars itens={porGrupo} />
         <p className="text-[11px] text-text-secondary">
-          Grupo = 2 primeiros dígitos do código SIGTAP — não existe seed
-          de-para para nome legível ainda (ver notes/backlog.md). Município
-          é o do estabelecimento de atendimento, não o de residência do
-          paciente.
+          Grupo SIGTAP = 2 primeiros dígitos do código de 10 dígitos do
+          procedimento. Município é o do estabelecimento de atendimento, não
+          o de residência do paciente.
         </p>
       </DashboardCard>
 
