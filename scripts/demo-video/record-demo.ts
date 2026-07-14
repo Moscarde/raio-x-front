@@ -1,48 +1,63 @@
 import { execFile } from "node:child_process";
+import { access, mkdir, stat } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { access, mkdir, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { chromium, type Locator, type Page } from "playwright";
 
 const execFileAsync = promisify(execFile);
 const requireFromScript = createRequire(import.meta.url);
-
-const appUrl = "http://2.25.172.31:3067";
+const appUrl = process.env.DEMO_APP_URL ?? "http://127.0.0.1:3000";
 const artifactDir = path.resolve("artifacts/demo-video");
-const finalVideoPath = path.join(artifactDir, "radarsus-demo.mp4");
-const municipioBase = "/municipios/3303807";
+const municipioInicialPath = "/municipios/3303807";
 const viewport = { width: 1920, height: 1080 };
 
 type AriaRole = Parameters<Page["getByRole"]>[0];
-type VideoMetadata = { durationSeconds: number | null; sizeBytes: number; path: string };
+type VideoMetadata = {
+  durationSeconds: number | null;
+  sizeBytes: number;
+  path: string;
+};
 
 async function main(): Promise<void> {
   await mkdir(artifactDir, { recursive: true });
-  await removeIfExists(finalVideoPath);
-  await waitForLocalApp();
+  await waitForApp();
 
   const webmPath = await recordDemoSession();
+  const finalVideoPath = await getFinalVideoPath();
   await convertWebmToMp4(webmPath, finalVideoPath);
 
   const metadata = await getVideoMetadata(finalVideoPath);
   console.log(JSON.stringify({ event: "demo_video_created", ...metadata }));
 }
 
-async function waitForLocalApp(): Promise<void> {
+async function getFinalVideoPath(): Promise<string> {
+  const commitHash = await getCurrentCommitHash();
+  const timestamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+  return path.join(artifactDir, `radarsus-demo-${commitHash}-${timestamp}.mp4`);
+}
+
+async function getCurrentCommitHash(): Promise<string> {
+  try {
+    const { stdout } = await execFileAsync("git", ["rev-parse", "--short", "HEAD"]);
+    return stdout.trim();
+  } catch {
+    return "sem-commit";
+  }
+}
+
+async function waitForApp(): Promise<void> {
   const startedAt = Date.now();
   while (Date.now() - startedAt < 60_000) {
     if (await isAppAvailable()) return;
     await pause(1_000);
   }
-
-  throw new Error(`Aplicação indisponível em ${appUrl}. Esperado deploy ativo em http://2.25.172.31:3067/.`);
+  throw new Error(`Aplicação indisponível em ${appUrl}. Inicie o Next.js ou defina DEMO_APP_URL.`);
 }
 
 async function isAppAvailable(): Promise<boolean> {
   try {
-    const response = await fetch(appUrl, { method: "HEAD" });
-    return response.ok;
+    return (await fetch(appUrl, { method: "HEAD" })).ok;
   } catch {
     return false;
   }
@@ -58,11 +73,10 @@ async function recordDemoSession(): Promise<string> {
 
   const page = await context.newPage();
   await runStoryboard(page);
-
   const video = page.video();
+
   await context.close();
   await browser.close();
-
   if (!video) throw new Error("Playwright não retornou o artefato de vídeo.");
   return video.path();
 }
@@ -73,6 +87,7 @@ async function runStoryboard(page: Page): Promise<void> {
   await sceneNetwork(page);
   await scenePrimaryCare(page);
   await sceneProduction(page);
+  await sceneFinancing(page);
   await sceneAlerts(page);
   await sceneComparator(page);
   await sceneReport(page);
@@ -82,114 +97,149 @@ async function runStoryboard(page: Page): Promise<void> {
 
 async function sceneHome(page: Page): Promise<void> {
   await gotoPage(page, "/");
-  await settle(page);
   await spotlightText(page, "RadarSUS");
-  await hoverRole(page, "link", "Nova Iguaçu");
   await hoverRole(page, "link", "Rio de Janeiro");
-  await clickRole(page, "link", "Paraty");
+  await hoverRole(page, "link", "São Gonçalo");
+  await hoverRole(page, "link", "Duque de Caxias");
+  await clickRole(page, "link", "Rio de Janeiro");
   await settle(page);
 }
 
 async function sceneOverview(page: Page): Promise<void> {
-  await spotlightText(page, "RAIO-X MUNICIPAL");
-  await hoverText(page, "Paraty");
-  await hoverText(page, "UNIDADES CNES");
-  await hoverText(page, "PRODUÇÃO AMB. / MÊS");
-  await hoverText(page, "Internações (SIH)");
-  await openMunicipioSelect(page);
-  await hoverText(page, "Produção ambulatorial");
+  await showMunicipalCoverage(page, ["Niterói", "Petrópolis"]);
+  await spotlightText(page, "Raio-X municipal");
+  await hoverText(page, "Cobertura APS");
+  await hoverText(page, "Equipes ESF ativas");
+  await hoverText(page, "Internações ICSAP");
   await sweepRecharts(page, 0, 8);
-  await hoverText(page, "Alertas priorizados");
-  await smoothScrollBy(page, 520);
+  await smoothScrollBy(page, 480);
   await hoverText(page, "Rede instalada");
   await hoverText(page, "Indicadores APS");
-  await smoothScrollBy(page, -520);
 }
 
 async function sceneNetwork(page: Page): Promise<void> {
   await clickRole(page, "link", "Rede e CNES");
   await settle(page);
+  await showMunicipalCoverage(page, ["Campos dos Goytacazes", "Volta Redonda"]);
   await hoverText(page, "Estabelecimentos cadastrados");
   await hoverText(page, "Com vínculo SUS");
-  await hoverText(page, "Consultório Isolado");
-  await hoverText(page, "Centro de Saúde/Unidade Básica de Saúde");
-  await hoverText(page, "Sociedade Empresária Limitada");
-  await smoothScrollBy(page, 430);
+  await hoverText(page, "Estabelecimentos por tipo");
+  await smoothScrollBy(page, 460);
   await hoverText(page, "Unidades cadastradas");
-  await hoverText(page, "Exibindo");
 }
 
 async function scenePrimaryCare(page: Page): Promise<void> {
   await clickRole(page, "link", "Atenção Primária");
   await settle(page);
+  await showMunicipalCoverage(page, ["Macaé", "Angra dos Reis"]);
   await hoverText(page, "Indicadores por visão de equipe");
   await hoverText(page, "Válidas");
-  await smoothScrollBy(page, 360);
-  await hoverText(page, "Previne Brasil foi extinto em 2024");
+  await smoothScrollBy(page, 350);
+  await hoverText(page, "Equipes e unidades de Atenção Primária");
 }
 
 async function sceneProduction(page: Page): Promise<void> {
   await clickRole(page, "link", "Produção");
   await settle(page);
+  await showMunicipalCoverage(page, ["Nova Iguaçu", "Itaboraí"]);
   await hoverText(page, "Procedimentos aprovados");
   await hoverText(page, "Valor aprovado");
-  await hoverText(page, "Produção por competência");
-  await sweepRecharts(page, 0, 12);
-  await pause(500);
-  await sweepRecharts(page, 0, 12);
-  await smoothScrollBy(page, 420);
+  await sweepRecharts(page, 0, 10);
+  await smoothScrollBy(page, 380);
   await hoverText(page, "Produção por grupo de procedimento");
-  await hoverText(page, "Grupo 02");
-  await hoverText(page, "Grupo 03");
+}
+
+async function sceneFinancing(page: Page): Promise<void> {
+  await clickRole(page, "link", "Financiamento");
+  await settle(page);
+  await showMunicipalCoverage(page, ["Cabo Frio", "Teresópolis"]);
+  await hoverText(page, "Aplicação em saúde");
+  await hoverText(page, "Repasses por fonte");
+  await hoverText(page, "Lançamentos de repasses federais");
 }
 
 async function sceneAlerts(page: Page): Promise<void> {
   await clickRole(page, "link", "Alertas");
   await settle(page);
+  await showMunicipalCoverage(page, ["Maricá", "Barra Mansa"]);
   await hoverText(page, "Todos os alertas");
-  await hoverText(page, "Nenhuma regra de alerta implementada");
+  await pause(1_000);
 }
 
 async function sceneComparator(page: Page): Promise<void> {
   await clickRole(page, "link", "Comparador");
   await settle(page);
-  await hoverText(page, "Resumo comparativo");
-  await hoverText(page, "Nova Iguaçu");
-  await hoverText(page, "Rio de Janeiro");
-  await smoothScrollBy(page, 500);
-  await hoverText(page, "Indicadores APS");
-  await hoverText(page, "Paraty");
+  await showComparatorCoverage(page, ["Niterói", "Campos dos Goytacazes"]);
+  await spotlightText(page, "vs. pares");
+  await hoverText(page, "Indicadores lado a lado");
+  await smoothScrollBy(page, 520);
+  await hoverText(page, "Porte de rede");
+  await hoverText(page, "Produção ambulatorial");
 }
 
 async function sceneReport(page: Page): Promise<void> {
-  await gotoPage(page, `${municipioBase}/relatorio`);
+  await gotoPage(page, `${municipioInicialPath}/relatorio`);
   await settle(page);
-  await hoverText(page, "Relatório executivo");
+  await showMunicipalCoverage(page, ["São João de Meriti", "Resende"]);
   await hoverText(page, "Geração de relatório com IA");
-  await hoverText(page, "Visão Geral, Rede e CNES, Atenção Primária e Produção");
+  await hoverText(page, "dados reais");
 }
 
 async function sceneQualityAndDocs(page: Page): Promise<void> {
   await clickRole(page, "link", "Qualidade dos dados");
   await settle(page);
   await hoverText(page, "Fontes carregadas");
-  await hoverText(page, "SIA");
   await hoverText(page, "Campos críticos nulos");
   await clickRole(page, "link", "metodologia e limitações");
   await settle(page);
-  await hoverText(page, "Metodologia e fontes dos indicadores");
-  await smoothScrollBy(page, 720);
-  await hoverText(page, "Produção ambulatorial");
+  await hoverText(page, "Metodologia");
+  await smoothScrollBy(page, 620);
 }
 
 async function sceneClosing(page: Page): Promise<void> {
-  await gotoPage(page, municipioBase);
+  await gotoPage(page, municipioInicialPath);
   await settle(page);
-  await hoverText(page, "RAIO-X MUNICIPAL");
+  await showMunicipalCoverage(page, ["Rio de Janeiro", "Paraty"]);
+  await spotlightText(page, "Raio-X municipal");
   await sweepRecharts(page, 0, 10);
-  await smoothScrollBy(page, 380);
-  await hoverText(page, "Rede instalada");
-  await pause(3_000);
+  await smoothScrollBy(page, 420);
+  await pause(2_000);
+}
+
+async function showMunicipalCoverage(
+  page: Page,
+  municipios: readonly [string, string],
+): Promise<void> {
+  await switchMunicipio(page, municipios[0]);
+  await switchMunicipio(page, municipios[1]);
+}
+
+async function showComparatorCoverage(
+  page: Page,
+  municipios: readonly [string, string],
+): Promise<void> {
+  await switchMunicipio(page, municipios[0]);
+  await switchMunicipio(page, municipios[1]);
+}
+
+async function switchMunicipio(page: Page, municipio: string): Promise<void> {
+  const trigger = page.getByRole("combobox").first();
+  if (!(await moveToLocator(page, trigger, "seletor de município"))) return;
+
+  await trigger.click({ force: true, timeout: 4_000 });
+  await pause(350);
+  const option = page
+    .getByRole("option", { name: new RegExp(`${escapeRegex(municipio)}.*RJ`, "i") })
+    .first();
+  if (!(await moveToLocator(page, option, `município ${municipio}`))) {
+    await page.keyboard.press("Escape");
+    return;
+  }
+
+  await option.click({ force: true, timeout: 4_000 });
+  await pulseCursor(page);
+  await settle(page);
+  await spotlightText(page, municipio);
 }
 
 async function gotoPage(page: Page, route: string): Promise<void> {
@@ -200,30 +250,20 @@ async function gotoPage(page: Page, route: string): Promise<void> {
 async function settle(page: Page): Promise<void> {
   await page.waitForLoadState("networkidle");
   await ensureCursorVisible(page);
-  await pause(700);
-}
-
-async function openMunicipioSelect(page: Page): Promise<void> {
-  const trigger = page.getByRole("combobox").first();
-  if (!(await isVisible(trigger))) return warnMissing("municipio select");
-  await moveToLocator(page, trigger, "municipio select");
-  await trigger.click({ force: true, timeout: 4_000 });
-  await pause(900);
-  await hoverText(page, "Rio de Janeiro · RJ");
-  await page.keyboard.press("Escape");
+  await pause(600);
 }
 
 async function hoverRole(page: Page, role: AriaRole, name: string): Promise<void> {
-  const locator = page.getByRole(role, { name: new RegExp(name, "i") }).first();
+  const locator = page.getByRole(role, { name: new RegExp(escapeRegex(name), "i") }).first();
   await moveToLocator(page, locator, `role=${role} name=${name}`);
 }
 
 async function clickRole(page: Page, role: AriaRole, name: string): Promise<void> {
-  const locator = page.getByRole(role, { name: new RegExp(name, "i") }).first();
+  const locator = page.getByRole(role, { name: new RegExp(escapeRegex(name), "i") }).first();
   if (!(await moveToLocator(page, locator, `role=${role} name=${name}`))) return;
   await locator.click({ force: true, timeout: 4_000 });
   await pulseCursor(page);
-  await pause(800);
+  await pause(700);
 }
 
 async function hoverText(page: Page, text: string): Promise<void> {
@@ -233,7 +273,7 @@ async function hoverText(page: Page, text: string): Promise<void> {
 
 async function spotlightText(page: Page, text: string): Promise<void> {
   await hoverText(page, text);
-  await pause(900);
+  await pause(600);
 }
 
 async function sweepRecharts(page: Page, index: number, steps: number): Promise<void> {
@@ -249,7 +289,7 @@ async function sweepRecharts(page: Page, index: number, steps: number): Promise<
     const progress = steps === 1 ? 0.5 : step / (steps - 1);
     const x = box.x + box.width * (0.08 + progress * 0.84);
     await page.mouse.move(x, y + Math.sin(step) * 16, { steps: 18 });
-    await pause(280);
+    await pause(220);
   }
 }
 
@@ -258,7 +298,6 @@ async function moveToLocator(page: Page, locator: Locator, label: string): Promi
     warnMissing(label);
     return false;
   }
-
   await locator.scrollIntoViewIfNeeded({ timeout: 4_000 });
   const box = await locator.boundingBox();
   if (!box) {
@@ -266,8 +305,8 @@ async function moveToLocator(page: Page, locator: Locator, label: string): Promi
     return false;
   }
 
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 32 });
-  await pause(620);
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 24 });
+  await pause(400);
   return true;
 }
 
@@ -283,11 +322,11 @@ async function smoothScrollBy(page: Page, pixels: number): Promise<void> {
   await page.evaluate(
     (distance) => new Promise<void>((resolve) => {
       window.scrollBy({ top: distance, behavior: "smooth" });
-      window.setTimeout(resolve, 1_000);
+      window.setTimeout(resolve, 800);
     }),
     pixels,
   );
-  await pause(500);
+  await pause(350);
 }
 
 async function ensureCursorVisible(page: Page): Promise<void> {
@@ -301,7 +340,6 @@ async function pulseCursor(page: Page): Promise<void> {
 async function convertWebmToMp4(inputPath: string, outputPath: string): Promise<void> {
   const ffmpegPath = await getFfmpegPath();
   if (!ffmpegPath) throw new Error(getFfmpegInstallMessage());
-
   await execFileAsync(ffmpegPath, [
     "-y", "-i", inputPath, "-c:v", "libx264", "-pix_fmt", "yuv420p",
     "-movflags", "+faststart", outputPath,
@@ -311,10 +349,8 @@ async function convertWebmToMp4(inputPath: string, outputPath: string): Promise<
 async function getFfmpegPath(): Promise<string | null> {
   const pathFfmpeg = await findExecutable("ffmpeg");
   if (pathFfmpeg) return pathFfmpeg;
-
   const staticPath = requireFromScript("ffmpeg-static") as string | null;
-  if (staticPath && (await exists(staticPath))) return staticPath;
-  return null;
+  return staticPath && (await exists(staticPath)) ? staticPath : null;
 }
 
 async function findExecutable(binaryName: string): Promise<string | null> {
@@ -338,7 +374,6 @@ async function getVideoMetadata(videoPath: string): Promise<VideoMetadata> {
 async function getDurationWithFfmpeg(videoPath: string): Promise<number | null> {
   const ffmpegPath = await getFfmpegPath();
   if (!ffmpegPath) return null;
-
   try {
     const { stderr } = await execFileAsync(ffmpegPath, ["-i", videoPath]);
     return parseDuration(stderr);
@@ -350,17 +385,8 @@ async function getDurationWithFfmpeg(videoPath: string): Promise<number | null> 
 function parseDuration(ffmpegOutput: string): number | null {
   const match = ffmpegOutput.match(/Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})/);
   if (!match) return null;
-
   const [, hours, minutes, seconds, centiseconds] = match;
   return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds) + Number(centiseconds) / 100;
-}
-
-async function removeIfExists(filePath: string): Promise<void> {
-  try {
-    await unlink(filePath);
-  } catch {
-    return;
-  }
 }
 
 async function exists(filePath: string): Promise<boolean> {
@@ -376,22 +402,10 @@ function injectDemoCursor(): void {
   const style = document.createElement("style");
   style.textContent = `
     body { cursor: none !important; }
-    #radarsus-demo-cursor {
-      position: fixed; left: 0; top: 0; z-index: 2147483647; width: 22px; height: 22px;
-      border: 2px solid #0b4f8a; border-radius: 999px; pointer-events: none;
-      box-shadow: 0 0 0 5px rgba(34,184,207,.18), 0 8px 24px rgba(11,79,138,.22);
-      transform: translate(-50%, -50%); transition: width .12s ease, height .12s ease;
-    }
-    #radarsus-demo-cursor::after {
-      content: ""; position: absolute; left: 50%; top: 50%; width: 5px; height: 5px;
-      background: #22b8cf; border-radius: 999px; transform: translate(-50%, -50%);
-    }
+    #radarsus-demo-cursor { position: fixed; left: 0; top: 0; z-index: 2147483647; width: 22px; height: 22px; border: 2px solid #0b4f8a; border-radius: 999px; pointer-events: none; box-shadow: 0 0 0 5px rgba(34,184,207,.18), 0 8px 24px rgba(11,79,138,.22); transform: translate(-50%, -50%); transition: width .12s ease, height .12s ease; }
+    #radarsus-demo-cursor::after { content: ""; position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; background: #22b8cf; border-radius: 999px; transform: translate(-50%, -50%); }
     #radarsus-demo-cursor.is-clicking { width: 34px; height: 34px; }
-    .radarsus-demo-trail {
-      position: fixed; z-index: 2147483646; width: 8px; height: 8px; border-radius: 999px;
-      background: rgba(34,184,207,.45); pointer-events: none; transform: translate(-50%, -50%);
-      animation: radarsus-demo-trail .65s ease-out forwards;
-    }
+    .radarsus-demo-trail { position: fixed; z-index: 2147483646; width: 8px; height: 8px; border-radius: 999px; background: rgba(34,184,207,.45); pointer-events: none; transform: translate(-50%, -50%); animation: radarsus-demo-trail .65s ease-out forwards; }
     @keyframes radarsus-demo-trail { to { opacity: 0; transform: translate(-50%, -50%) scale(2.4); } }
   `;
   document.documentElement.appendChild(style);
@@ -399,14 +413,13 @@ function injectDemoCursor(): void {
   const cursor = document.createElement("div");
   cursor.id = "radarsus-demo-cursor";
   document.documentElement.appendChild(cursor);
-
   let lastTrailAt = 0;
+
   window.addEventListener("mousemove", (event) => {
     cursor.style.left = `${event.clientX}px`;
     cursor.style.top = `${event.clientY}px`;
-    const now = Date.now();
-    if (now - lastTrailAt < 80) return;
-    lastTrailAt = now;
+    if (Date.now() - lastTrailAt < 80) return;
+    lastTrailAt = Date.now();
     const trail = document.createElement("span");
     trail.className = "radarsus-demo-trail";
     trail.style.left = `${event.clientX}px`;

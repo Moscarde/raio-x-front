@@ -1,11 +1,11 @@
 # Demo em vídeo do RadarSUS
 
-Este diretório contém a automação Playwright que grava uma demonstração comercial/técnica do RadarSUS navegando pelo deploy em `http://2.25.172.31:3067/`.
+Este diretório contém a automação Playwright que grava uma demonstração comercial/técnica do RadarSUS contra a aplicação atual.
 O script injeta um cursor visual e uma trilha temporária na página para que o caminho do mouse apareça no vídeo gravado pelo Playwright.
 
 ## Dependências
 
-* Deploy RadarSUS acessível em `http://2.25.172.31:3067/`.
+* Aplicação RadarSUS acessível em `http://127.0.0.1:3000/`, ou em uma URL definida por `DEMO_APP_URL`.
 * Node.js compatível com o projeto. O Next.js 16 deste repositório requer Node 20.9+.
 * Dependências de desenvolvimento: `playwright`, `tsx` e `ffmpeg-static`.
 * Browser Chromium do Playwright instalado com `npx playwright install chromium`.
@@ -19,16 +19,24 @@ sudo apt-get update && sudo apt-get install -y ffmpeg
 
 ## Como rodar
 
-Com o deploy disponível em `http://2.25.172.31:3067/`:
+Com a aplicação local em execução:
 
 ```bash
+npm run dev
 npm run demo:video
 ```
 
-O vídeo final será salvo em:
+Para gravar outro ambiente, defina a URL sem alterá-la no código:
+
+```bash
+DEMO_APP_URL=https://radarsus.exemplo.gov.br npm run demo:video
+```
+
+O vídeo final recebe hash curto do commit e timestamp UTC para não sobrescrever
+gravações anteriores:
 
 ```txt
-artifacts/demo-video/radarsus-demo.mp4
+artifacts/demo-video/radarsus-demo-<commit>-<YYYYMMDDTHHMMSSZ>.mp4
 ```
 
 Artefatos intermediários do Playwright, como `.webm`, também ficam em `artifacts/demo-video/`.
@@ -51,7 +59,7 @@ Quando um elemento esperado não aparece, o script registra um aviso e continua 
 
 ## Problemas comuns
 
-* Deploy indisponível: confirme acesso a `http://2.25.172.31:3067/` antes de gravar.
+* Aplicação indisponível: inicie `npm run dev` ou informe `DEMO_APP_URL`.
 * Chromium ausente: rode `npx playwright install chromium`.
 * FFmpeg ausente: instale via sistema ou mantenha `ffmpeg-static` instalado.
 * Ambiente sem display: o script roda em modo headless por padrão, adequado para Linux sem interface gráfica.

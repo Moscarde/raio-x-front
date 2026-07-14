@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -20,11 +20,19 @@ export function MunicipioSelect({
   municipioSelecionadoId,
 }: MunicipioSelectProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <Select
       value={String(municipioSelecionadoId)}
-      onValueChange={(value) => router.push(`/municipios/${value}`)}
+      onValueChange={(value) =>
+        router.push(
+          pathname.replace(
+            /\/municipios\/\d{6,7}(?=\/|$)/,
+            `/municipios/${value}`,
+          ),
+        )
+      }
     >
       <SelectTrigger>
         <SelectValue>
