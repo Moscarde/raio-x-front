@@ -6,3 +6,7 @@ export type MunicipioResumo = {
   nomeMesorregiao: string;
   nomeRegiao: string;
 };
+
+export type MunicipioRjResumo = MunicipioResumo & {
+  populacaoEstimada: number;
+};

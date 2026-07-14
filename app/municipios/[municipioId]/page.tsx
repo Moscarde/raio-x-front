@@ -31,7 +31,6 @@ import {
   getAlertasPrioritarios,
   getTotalAlertasAtivos,
 } from "@/lib/queries/alertas";
-import type { MunicipioResumo } from "@/types/municipio";
 import type { IndicadorIcsap, ResumoInternacoes } from "@/types/internacao";
 import type { ProducaoMensalPoint } from "@/types/producao-ambulatorial";
 import type { CoberturaApsMunicipio } from "@/types/cobertura-aps";
@@ -85,17 +84,6 @@ async function VisaoGeralContent({ municipioId }: VisaoGeralContentProps) {
 
   if (!municipio) {
     notFound();
-  }
-
-  const temDadoReal = disponiveis.some((m) => m.municipioId === municipioId);
-  if (!temDadoReal) {
-    return (
-      <MunicipioSemDadosReais
-        municipio={municipio}
-        municipioId={municipioId}
-        disponiveis={disponiveis}
-      />
-    );
   }
 
   const [
@@ -209,39 +197,6 @@ async function VisaoGeralContent({ municipioId }: VisaoGeralContentProps) {
 
       <p className="text-center font-mono text-[10.5px] text-text-tertiary">
         FONTES: CNES · SIA · SIH · SISAB — DADOS REAIS (raio-x-engenharia)
-      </p>
-    </>
-  );
-}
-
-type MunicipioSemDadosReaisProps = {
-  municipio: MunicipioResumo;
-  municipioId: number;
-  disponiveis: MunicipioResumo[];
-};
-
-function MunicipioSemDadosReais({
-  municipio,
-  municipioId,
-  disponiveis,
-}: MunicipioSemDadosReaisProps) {
-  return (
-    <>
-      <DashboardHeader
-        kicker="Raio-X municipal"
-        title={municipio.nomeMunicipio}
-        subtitle={`${municipio.siglaUf} · ${municipio.nomeMicrorregiao}`}
-        actions={
-          <MunicipioSelect
-            municipios={disponiveis}
-            municipioSelecionadoId={municipioId}
-          />
-        }
-      />
-      <p className="text-sm text-text-secondary">
-        Dados ainda não carregados para este município. O MVP atual cobre
-        Rio de Janeiro, Paraty e Nova Iguaçu — ver ROADMAP.md do
-        raio-x-engenharia.
       </p>
     </>
   );

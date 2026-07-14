@@ -146,10 +146,9 @@ horizontal (porte de rede e produção per capita) com anotação de outlier.
   escopo em 2026-07-04) — deu pra calcular produção ambulatorial per capita
   pros 92 municípios, não só os 3 de referência, então os gráficos e o KPI
   de ranking funcionam pra qualquer município selecionado.
-- Cobertura APS e ICSAP continuam restritos aos 3 municípios de referência
-  (dado real só existe pra eles) — a tabela mostra "—" pros demais 89, e
-  ponto forte/ponto fraco só consideram indicadores com dado disponível
-  pro município principal.
+- Cobertura APS e ICSAP passaram a cobrir os 92 municípios do RJ após a carga
+  ampliada. A tabela comparativa e os destaques usam esses indicadores para
+  todos os municípios selecionáveis.
 - Nova `lib/queries/comparacao-municipios.ts` (query + pareamento + ranking
   + destaques, todas funções puras testadas em
   `tests/queries/comparacao-municipios.test.ts`), `types/comparacao-municipio.ts`,
@@ -161,8 +160,7 @@ horizontal (porte de rede e produção per capita) com anotação de outlier.
 - Não implementado: exportação da comparação (CTA fica desabilitado, como
   o botão de relatório executivo na Visão Geral) e a tabela comparativa de
   indicadores Previne Brasil por visão de equipe que existia na versão
-  anterior da página (não fazia sentido pro modelo de pareamento entre 92
-  municípios — SISAB só cobre os 3 refs).
+  anterior da página.
 
 ## Fase 8 — Financiamento municipal (`mart_financiamento_saude_uniao` + `mart_financiamento_saude_siops` + `mart_repasses_fns`) ✅ concluída em 2026-07-13
 

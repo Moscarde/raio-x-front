@@ -1,8 +1,12 @@
 import Link from "next/link";
-import { getMunicipiosDisponiveis } from "@/lib/queries/municipios";
+import { MunicipioSelect } from "@/components/filters/municipio-select";
+import { formatNumber } from "@/lib/formatters/number-format";
+import { getMunicipiosRjPorPopulacao } from "@/lib/queries/municipios";
 
 export default async function Home() {
-  const municipios = await getMunicipiosDisponiveis();
+  const municipios = await getMunicipiosRjPorPopulacao();
+  const municipiosPrincipais = municipios.slice(0, 5);
+  const municipioSelecionado = municipios[0];
 
   return (
     <div className="flex min-h-full flex-col items-center gap-10 bg-background px-6 py-16">
@@ -14,12 +18,25 @@ export default async function Home() {
           </span>
         </span>
         <p className="max-w-md text-sm text-text-secondary">
-          Escolha um município para ver o Raio-X municipal.
+          Escolha um dos municípios em destaque ou selecione outro para ver o
+          Raio-X municipal.
         </p>
       </div>
 
-      <div className="grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
-        {municipios.map((municipio) => (
+      {municipioSelecionado ? (
+        <div className="flex w-full max-w-sm flex-col gap-2">
+          <span className="font-mono text-[10.5px] font-semibold tracking-wide text-text-secondary uppercase">
+            Todos os {municipios.length} municípios do Rio de Janeiro
+          </span>
+          <MunicipioSelect
+            municipios={municipios}
+            municipioSelecionadoId={municipioSelecionado.municipioId}
+          />
+        </div>
+      ) : null}
+
+      <div className="grid w-full max-w-6xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {municipiosPrincipais.map((municipio) => (
           <Link
             key={municipio.municipioId}
             href={`/municipios/${municipio.municipioId}`}
@@ -30,6 +47,9 @@ export default async function Home() {
             </span>
             <span className="text-xs text-text-secondary">
               {municipio.siglaUf} · {municipio.nomeMicrorregiao}
+            </span>
+            <span className="font-mono text-[10.5px] text-text-tertiary">
+              {formatNumber(municipio.populacaoEstimada)} habitantes
             </span>
           </Link>
         ))}

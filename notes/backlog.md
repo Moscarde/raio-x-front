@@ -11,12 +11,8 @@ entregues pelo `raio-x-engenharia` em 2026-07-12/13.
   (`app/municipios/[municipioId]/rede-cnes/page.tsx`) — não era uma
   pergunta que dependia do projeto de dados, só de nomenclatura de
   produto.
-- **Critério de pareamento de municípios** (Comparador): implementado como
-  comparação **direta entre os 3 municípios com dado real** hoje (Rio de
-  Janeiro, Paraty, Nova Iguaçu), sem simular pareamento por população/
-  região/porte — o universo real de dados é só esses 3, pareá-los não
-  faria sentido. Se o dbt carregar mais municípios no futuro, essa página
-  precisa ser revisitada para um pareamento de verdade.
+- **Critério de pareamento de municípios** (Comparador): implementado para
+  os 92 municípios do RJ por população, porte de rede ou microrregião.
 
 ## Decisões pendentes
 
@@ -85,15 +81,13 @@ de grão e decisões de agregação de cada mart.
   as duas exigiria decidir o que fazer com o resto do Brasil). Está
   disponível em 2 lugares, dependendo do escopo:
   * `marts.mart_cobertura_aps_municipio` (`id_municipio,
-    ano_referencia_populacao, populacao_estimada`) — só os 3 municípios de
-    referência.
+    ano_referencia_populacao, populacao_estimada`) — os 92 municípios do RJ.
   * `marts.mart_comparacao_municipios_rj` (`id_municipio, nome_municipio,
     ano_referencia_populacao, populacao_estimada,
     quantidade_estabelecimentos_saude, estabelecimentos_por_10k_habitantes,
     municipio_referencia`) — os 92 municípios do RJ, com porte de rede
     junto; é essa que dá pareamento de verdade (ver "Decisões resolvidas"
-    acima sobre o Comparador) — 3 comparação direta hoje, os 92 já
-    disponíveis quando a página for revisitada.
+    acima sobre o Comparador).
   Continua sem população em `dim_municipio` propriamente dita — se algum
   consumo precisar de população por município **sem** depender de uma
   mart de domínio específico, essa lacuna segue aberta.

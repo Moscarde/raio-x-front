@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { mapRowToMunicipioResumo } from "../../lib/queries/municipios";
+import {
+  mapRowToMunicipioRjResumo,
+  mapRowToMunicipioResumo,
+} from "../../lib/queries/municipios";
 
 describe("mapRowToMunicipioResumo", () => {
   it("mapeia colunas snake_case do Postgres para o tipo de domínio", () => {
@@ -20,5 +23,21 @@ describe("mapRowToMunicipioResumo", () => {
       nomeMesorregiao: "Sul Fluminense",
       nomeRegiao: "Sudeste",
     });
+  });
+});
+
+describe("mapRowToMunicipioRjResumo", () => {
+  it("inclui a população estimada convertida de numeric", () => {
+    const resumo = mapRowToMunicipioRjResumo({
+      id_municipio: 3304557,
+      nome_municipio: "Rio de Janeiro",
+      sigla_uf: "RJ",
+      nome_microrregiao: "Rio de Janeiro",
+      nome_mesorregiao: "Metropolitana do Rio de Janeiro",
+      nome_regiao: "Sudeste",
+      populacao_estimada: "6211223",
+    });
+
+    expect(resumo.populacaoEstimada).toBe(6211223);
   });
 });

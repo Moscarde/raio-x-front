@@ -197,12 +197,10 @@ async function ComparadorContent({
           alvoId={alvo.municipioId}
         />
         <p className="text-[11px] text-text-secondary">
-          Cobertura APS e ICSAP só têm dado real para Rio de Janeiro, Paraty e
-          Nova Iguaçu hoje — os demais municípios do RJ mostram &ldquo;—&rdquo;
-          nessas linhas. ICSAP usa como denominador o total de internações do
-          município de residência (metodologia oficial completa restringe a
-          internações clínicas, recorte que o SIH ainda não permite
-          reproduzir integralmente).
+          Cobertura APS e ICSAP contemplam os 92 municípios do RJ. ICSAP usa
+          como denominador o total de internações do município de residência
+          (metodologia oficial completa restringe a internações clínicas,
+          recorte que o SIH ainda não permite reproduzir integralmente).
         </p>
       </DashboardCard>
 

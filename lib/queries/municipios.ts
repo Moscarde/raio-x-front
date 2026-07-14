@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { query } from "@/lib/db/postgres";
-import type { MunicipioResumo } from "@/types/municipio";
+import { parseNumericColumn } from "@/lib/db/numeric";
+import type { MunicipioResumo, MunicipioRjResumo } from "@/types/municipio";
 
 type MunicipioRow = {
   id_municipio: number;
@@ -9,6 +10,10 @@ type MunicipioRow = {
   nome_microrregiao: string;
   nome_mesorregiao: string;
   nome_regiao: string;
+};
+
+type MunicipioRjRow = MunicipioRow & {
+  populacao_estimada: string;
 };
 
 export function mapRowToMunicipioResumo(row: MunicipioRow): MunicipioResumo {
@@ -22,23 +27,25 @@ export function mapRowToMunicipioResumo(row: MunicipioRow): MunicipioResumo {
   };
 }
 
-/**
- * dim_municipio cobre os 5.571 municípios do Brasil (dimensão IBGE
- * completa), mas só os municípios com pelo menos uma fonte carregada (SIH,
- * SIM ou SINASC) têm dado real hoje — ver ROADMAP.md do raio-x-engenharia.
- */
+export function mapRowToMunicipioRjResumo(row: MunicipioRjRow): MunicipioRjResumo {
+  return {
+    ...mapRowToMunicipioResumo(row),
+    populacaoEstimada: parseNumericColumn(row.populacao_estimada),
+  };
+}
+
+/** Lista os municípios do RJ com cobertura nas marts municipais do dashboard. */
 async function buscarMunicipiosDisponiveis(): Promise<MunicipioResumo[]> {
   const rows = await query<MunicipioRow>(`
-    with municipios_com_dado as (
-      select distinct id_municipio_estabelecimento as id_municipio from marts.fct_internacoes
-      union
-      select distinct id_municipio_ocorrencia from marts.fct_obitos
-      union
-      select distinct id_municipio_nascimento from marts.fct_nascidos_vivos
-    )
-    select m.id_municipio, m.nome_municipio, m.sigla_uf, m.nome_microrregiao, m.nome_mesorregiao, m.nome_regiao
+    select
+      m.id_municipio,
+      m.nome_municipio,
+      m.sigla_uf,
+      m.nome_microrregiao,
+      m.nome_mesorregiao,
+      m.nome_regiao
     from marts.dim_municipio m
-    join municipios_com_dado d on d.id_municipio = m.id_municipio
+    join marts.mart_comparacao_municipios_rj c on c.id_municipio = m.id_municipio
     order by m.nome_municipio
   `);
   return rows.map(mapRowToMunicipioResumo);
@@ -47,6 +54,29 @@ async function buscarMunicipiosDisponiveis(): Promise<MunicipioResumo[]> {
 export const getMunicipiosDisponiveis = unstable_cache(
   buscarMunicipiosDisponiveis,
   ["municipios-disponiveis"],
+  { revalidate: 3600 },
+);
+
+async function buscarMunicipiosRjPorPopulacao(): Promise<MunicipioRjResumo[]> {
+  const rows = await query<MunicipioRjRow>(`
+    select
+      m.id_municipio,
+      m.nome_municipio,
+      m.sigla_uf,
+      m.nome_microrregiao,
+      m.nome_mesorregiao,
+      m.nome_regiao,
+      c.populacao_estimada
+    from marts.mart_comparacao_municipios_rj c
+    join marts.dim_municipio m on m.id_municipio = c.id_municipio
+    order by c.populacao_estimada desc, m.nome_municipio
+  `);
+  return rows.map(mapRowToMunicipioRjResumo);
+}
+
+export const getMunicipiosRjPorPopulacao = unstable_cache(
+  buscarMunicipiosRjPorPopulacao,
+  ["municipios-rj-por-populacao"],
   { revalidate: 3600 },
 );
 

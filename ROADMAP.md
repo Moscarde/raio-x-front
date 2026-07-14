@@ -114,9 +114,9 @@ para esta tela (tipada, camada de dados correta, sem dado sensível, estados
 tratados, segue a referência visual, testada onde há lógica).
 
 ~~Fase 4~~ ✅ concluída em 2026-07-05 — `app/page.tsx` é uma escolha real
-entre os 3 municípios com dado carregado (`getMunicipiosDisponiveis`), não
-mais um redirect fixo. Sidebar já marcava item ativo real e badge de
-alertas real (0) desde a Fase 3.
+entre os municípios do RJ cobertos pelas marts do dashboard
+(`getMunicipiosDisponiveis`), não mais um redirect fixo. Sidebar já marcava
+item ativo real e badge de alertas real (0) desde a Fase 3.
 
 ## Fase 4 — Navegação real e seleção de município
 
@@ -132,12 +132,9 @@ Objetivo: transformar as páginas isoladas em um produto navegável.
 navegar pela sidebar sem página quebrada (os itens ainda sem tela podem
 apontar para um estado "em construção" temporário, não para 404).
 
-~~Fase 5~~ ✅ concluída em 2026-07-05, com uma mudança de escopo explícita:
-`app/comparador/page.tsx` compara os 3 municípios com dado real
-diretamente lado a lado, em vez de simular um "pareamento" por
-população/região/porte — o universo real de dados hoje é só esses 3
-municípios, então pareá-los não teria sentido. Ver `notes/backlog.md` para
-quando isso deixa de ser válido (mais municípios carregados no dbt).
+~~Fase 5~~ ✅ concluída em 2026-07-05 e expandida em 2026-07-13:
+`app/comparador/page.tsx` compara os 92 municípios do RJ por pareamento de
+população, porte de rede ou microrregião.
 
 ## Fase 5 — Página Comparador
 
@@ -242,10 +239,10 @@ Objetivo: avaliar se este repositório também hospeda a landing pública
 segurança rápida (nenhuma credencial hardcoded, `.env.local` sempre
 gitignored, só dado agregado exibido); todas as 9 rotas verificadas no
 navegador sem erro de console. Falta: revisão de performance mais profunda
-das novas queries pesadas (Comparador dispara `getProducaoMensal` para os
-3 municípios em paralelo — cada uma cacheada separadamente, mas ainda vale
-medir o pior caso de cache frio) e cobertura de teste mais ampla conforme
-novas páginas amadurecerem.
+das novas queries pesadas (Comparador dispara leituras paralelas para o
+município principal e seus pares — cada uma cacheada separadamente, mas
+ainda vale medir o pior caso de cache frio) e cobertura de teste mais ampla
+conforme novas páginas amadurecerem.
 
 ## Fase 11 — Polimento e endurecimento
 
