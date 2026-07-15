@@ -26,5 +26,6 @@ describe("mapRowToIndicadorAps", () => {
       metaPercentual: 45,
       statusMeta: "atencao",
     });
+    expect(indicador.percentualQuadrimestre).toBe(54);
   });
 });

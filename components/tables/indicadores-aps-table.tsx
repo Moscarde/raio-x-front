@@ -19,7 +19,7 @@ export function IndicadoresApsTable({ indicadores }: IndicadoresApsTableProps) {
     <div className="flex flex-col">
       <div className="grid grid-cols-[2.4fr_0.8fr_0.8fr_1fr] gap-2 border-b border-border-hairline pb-2 font-mono text-[10px] font-semibold tracking-wide text-text-tertiary uppercase">
         <span>Indicador</span>
-        <span className="text-right">Resultado</span>
+        <span className="text-right">Resultado do quadrimestre</span>
         <span className="text-right">Meta</span>
         <span className="text-right">Status</span>
       </div>
@@ -30,7 +30,7 @@ export function IndicadoresApsTable({ indicadores }: IndicadoresApsTableProps) {
         >
           <span>{indicador.descricaoIndicador}</span>
           <span className="text-right font-display text-sm font-semibold">
-            {formatPercent(indicador.percentual, 0)}
+            {formatPercent(indicador.percentualQuadrimestre, 0)}
           </span>
           <span className="text-right">
             {indicador.metaPercentual === null
