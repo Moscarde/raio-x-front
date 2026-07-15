@@ -62,5 +62,9 @@ function getStatusSeverity(status: IndicadorAps["statusMeta"]): StatusSeverity {
 }
 
 function getStatusLabel(status: NonNullable<IndicadorAps["statusMeta"]>): string {
-  return status === "ok" ? "Meta atingida" : status === "atencao" ? "Atenção" : "Crítico";
+  return status === "ok"
+    ? "Parâmetro ideal atingido"
+    : status === "atencao"
+      ? "Meta atingida, abaixo do ideal"
+      : "Meta não atingida";
 }

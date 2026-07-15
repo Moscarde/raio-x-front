@@ -105,9 +105,11 @@ async function AtencaoPrimariaContent({
           de financiamento do Previne Brasil; &ldquo;geral&rdquo; e
           &ldquo;homologadas&rdquo; existem na mesma base mas não são o
           número usado para pagamento (ver
-          lib/queries/indicadores-aps.ts). As metas e os status vêm das notas
-          técnicas oficiais do Previne Brasil. O Previne Brasil foi extinto em 2024 — 2024Q3 é o último
-          quadrimestre disponível, não há série mais recente para comparar.
+          lib/queries/indicadores-aps.ts). A meta é o mínimo pactuado;
+          &ldquo;Meta atingida, abaixo do ideal&rdquo; indica que o resultado ainda não
+          alcançou o parâmetro ideal oficial. O Previne Brasil foi extinto em
+          2024 — 2024Q3 é o último quadrimestre disponível, não há série mais
+          recente para comparar.
         </p>
       </DashboardCard>
 
@@ -230,5 +232,9 @@ function getStatusSeverity(status: StatusMetaAps): StatusSeverity {
 }
 
 function getStatusLabel(status: StatusMetaAps): string {
-  return status === "ok" ? "Meta atingida" : status === "atencao" ? "Atenção" : "Crítico";
+  return status === "ok"
+    ? "Parâmetro ideal atingido"
+    : status === "atencao"
+      ? "Meta atingida, abaixo do ideal"
+      : "Meta não atingida";
 }

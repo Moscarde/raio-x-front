@@ -189,8 +189,9 @@ async function VisaoGeralContent({ municipioId }: VisaoGeralContentProps) {
           </span>
           <IndicadoresApsTable indicadores={indicadoresAps} />
           <p className="text-[11px] text-text-secondary">
-            Metas e status seguem parâmetros oficiais do Previne Brasil
-            publicados pelo Ministério da Saúde.
+            A meta é o mínimo pactuado. &ldquo;Meta atingida, abaixo do ideal&rdquo;
+            indica que o resultado quadrimestral superou a meta, mas ainda não
+            alcançou o parâmetro ideal oficial do Previne Brasil.
           </p>
         </DashboardCard>
       </ContentGrid>
