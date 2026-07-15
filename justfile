@@ -1,13 +1,10 @@
 # Comandos de setup e deploy do RadarSUS Municipal.
-# Requer: node, npm, docker (com BuildKit), ssh configurado para o VPS de
-# deploy. Ajuste `deploy_host` e `deploy_container` antes de usar `just deploy`.
+# O deploy é executado diretamente na VPS de produção, sem SSH.
 
 image_name := "raio-x-front"
 image_tag := "latest"
 env_file := ".env"
 
-# VPS de produção.
-deploy_host := "moscarde@2.25.172.31"
 deploy_container := "raio-x-front"
 deploy_port := "3067"
 
@@ -59,17 +56,11 @@ docker-build:
 docker-run:
     docker run --rm --network=host -e PORT={{ deploy_port }} --env-file {{ env_file }} --name {{ deploy_container }} {{ image_name }}:{{ image_tag }}
 
-# Deploy executado no próprio VPS. Assume Postgres acessível via localhost
-# (--network=host); ajuste se o seu setup usar outra rede Docker.
+# Recria o container de produção na própria VPS. Assume Postgres acessível via
+# localhost (--network=host); ajuste se o setup usar outra rede Docker.
 deploy: docker-build
     docker rm -f {{ deploy_container }} 2>/dev/null || true
     docker run -d --restart unless-stopped --network=host -e PORT={{ deploy_port }} --env-file {{ env_file }} --name {{ deploy_container }} {{ image_name }}:{{ image_tag }}
-
-# Deploy remoto via docker save/load, para uso fora do VPS (sem registry).
-deploy-remote: docker-build
-    docker save {{ image_name }}:{{ image_tag }} | gzip | ssh {{ deploy_host }} "gunzip | docker load"
-    scp {{ env_file }} {{ deploy_host }}:~/{{ image_name }}.env
-    ssh {{ deploy_host }} "docker stop {{ deploy_container }} 2>/dev/null; docker rm {{ deploy_container }} 2>/dev/null; docker run -d --restart unless-stopped --network=host -e PORT={{ deploy_port }} --env-file ~/{{ image_name }}.env --name {{ deploy_container }} {{ image_name }}:{{ image_tag }}"
 
 # --- Limpeza ---
 
