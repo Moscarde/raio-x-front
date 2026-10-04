@@ -1,379 +1,97 @@
-# RadarSUS Dashboards
+# RadarSUS — Dashboards do Raio-X Municipal
 
-Aplicação web analítica para visualização de indicadores municipais de saúde.
+Aplicação web para explorar indicadores municipais de saúde, acompanhar a rede assistencial e comparar municípios do Rio de Janeiro. O RadarSUS apresenta os dados produzidos pelo projeto de engenharia em dashboards, gráficos, tabelas e relatórios executivos.
 
-Este projeto consome dados do PostgreSQL alimentado pelo projeto principal de engenharia de dados e apresenta dashboards, relatórios executivos e páginas documentais com interface customizada.
+## Funcionalidades
 
-## Stack
+- Visão geral por município e comparação entre municípios.
+- Atenção primária: cobertura, equipes e indicadores.
+- Rede CNES e produção ambulatorial.
+- Financiamento e alertas priorizados.
+- Relatório municipal, documentação metodológica e qualidade dos dados.
 
-* Next.js
-* TypeScript
-* Tailwind CSS
-* shadcn/ui
-* Recharts
-* PostgreSQL
-* dbt no projeto principal
+As páginas dependem das cargas e marts disponíveis no PostgreSQL. Competências e cobertura variam por fonte; ausência de dados não equivale a valor zero.
 
-## Relação com o projeto de dados
+## Arquitetura
 
-Este repositório é apenas a camada de aplicação e apresentação.
-
-O projeto principal de engenharia de dados fica em:
-
-```txt
-/home/moscarde/raio-x-engenharia
+```mermaid
+flowchart LR
+    E[raio-x-engenharia / dbt] --> P[PostgreSQL: marts]
+    P --> Q[lib/db + lib/queries]
+    Q --> S[Next.js: servidor]
+    S --> V[Componentes e gráficos]
 ```
 
-Ele é responsável por:
+As consultas rodam no servidor. O código de conexão usa `server-only`, e as credenciais não devem receber prefixo `NEXT_PUBLIC_`. Regras centrais de transformação ficam no dbt; a aplicação organiza consultas e apresentação.
 
-* ingestão de dados;
-* Airflow;
-* dbt;
-* transformação;
-* testes;
-* criação de views e tabelas analíticas;
-* camadas raw, staging, intermediate e gold/marts.
+## Stack e estrutura
 
-Este projeto deve consumir preferencialmente views/tabelas analíticas já prontas, como:
+Next.js 16, React 19, TypeScript, Tailwind CSS, shadcn/ui, Recharts, PostgreSQL e Vitest.
 
-```txt
-gold_dashboard.*
-marts_dashboard.*
-analytics.*
-gold.*
-marts.*
-```
+| Caminho | Conteúdo |
+|---|---|
+| [app/](app/) | Rotas e composição das páginas |
+| [components/](components/) | Layout, cards, gráficos, filtros e tabelas |
+| [lib/db/](lib/db/) | Conexão PostgreSQL e configuração de timeouts |
+| [lib/queries/](lib/queries/) | Consultas SQL isoladas da interface |
+| [tests/](tests/) | Testes automatizados |
+| [reference/](reference/) | Design system e referências visuais |
+| [scripts/demo-video/](scripts/demo-video/) | Gravação da demonstração |
 
-Evite colocar regras pesadas de negócio ou transformação neste frontend.
+## Executar localmente
 
-## Objetivo
-
-Criar uma interface no estilo produto SaaS/dashboard para apoiar leitura executiva dos dados municipais.
-
-A aplicação deve permitir:
-
-* visualizar resumo municipal;
-* acompanhar indicadores principais;
-* identificar alertas priorizados;
-* consultar rede instalada;
-* acompanhar produção mensal;
-* visualizar indicadores APS;
-* gerar ou preparar relatórios executivos;
-* documentar metodologia e origem dos dados.
-
-## Referências visuais
-
-A pasta abaixo contém imagens, HTMLs e referências de design:
-
-```txt
-reference/
-```
-
-Antes de alterar telas principais, consulte essa pasta para manter consistência visual.
-
-Os padrões visuais e o inventário de páginas já foram extraídos das
-referências brutas para consulta rápida:
-
-```txt
-reference/design-system.md   cores, tipografia, espaçamento, componentes
-reference/paginas.md         inventário de páginas (prontas e pendentes)
-```
-
-Prefira consultar esses dois arquivos antes de abrir `Radar SUS.dc.html`
-diretamente — ele é pesado e serve só como fonte original caso falte algum
-detalhe.
-
-As referências devem orientar:
-
-* sidebar;
-* cards;
-* gráficos;
-* tabelas;
-* badges;
-* cores;
-* espaçamento;
-* hierarquia visual;
-* estilo executivo/institucional.
-
-## Estrutura sugerida
-
-```txt
-.
-├── app/
-│   ├── layout.tsx
-│   ├── page.tsx
-│   ├── municipios/
-│   │   └── [municipioId]/
-│   │       └── page.tsx
-│   ├── documentacao/
-│   │   └── page.tsx
-│   └── api/
-├── components/
-│   ├── layout/
-│   ├── cards/
-│   ├── charts/
-│   ├── tables/
-│   ├── alerts/
-│   ├── filters/
-│   └── ui/
-├── lib/
-│   ├── db/
-│   ├── queries/
-│   ├── formatters/
-│   ├── validators/
-│   └── utils/
-├── types/
-├── tests/
-├── reference/
-├── notes/
-└── public/
-```
-
-## Instalação
-
-Instale as dependências:
+Pré-requisitos: Node.js 20.9 ou superior, npm e acesso a um PostgreSQL com os models do `raio-x-engenharia` carregados. Este repositório não cria nem preenche os marts.
 
 ```bash
-npm install
+git clone https://github.com/Moscarde/raio-x-front.git
+cd raio-x-front
+npm ci
+cp .env.example .env.local
 ```
 
-Rode o projeto em desenvolvimento:
+Configure `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER` e `POSTGRES_PASSWORD`. O nome do banco deve coincidir com o usado pela engenharia; os exemplos dos repositórios usam nomes diferentes. Utilize uma role com permissões de leitura nas tabelas consultadas.
+
+Os timeouts opcionais `POSTGRES_CONNECTION_TIMEOUT_MS`, `POSTGRES_QUERY_TIMEOUT_MS` e `POSTGRES_STATEMENT_TIMEOUT_MS` estão em [.env.example](.env.example).
 
 ```bash
 npm run dev
 ```
 
-A aplicação ficará disponível em:
+Abra `http://localhost:3000`. Para diagnosticar falhas de dados, confira a conexão, os grants e as tabelas referenciadas em `lib/queries/`, especialmente no schema `marts`.
 
-```txt
-http://localhost:3000
-```
-
-## Variáveis de ambiente
-
-Crie um arquivo `.env.local` na raiz do projeto.
-
-Exemplo:
-
-```env
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=raio_x
-POSTGRES_USER=readonly_user
-POSTGRES_PASSWORD=change_me
-```
-
-Nunca versionar `.env.local`.
-
-Credenciais de banco não devem usar prefixo `NEXT_PUBLIC_`.
-
-Variáveis com `NEXT_PUBLIC_` ficam disponíveis no navegador e só devem ser usadas para valores públicos.
-
-## Scripts
-
-Scripts esperados:
+## Verificação e build
 
 ```bash
-npm run dev
-npm run build
-npm run start
+npx tsc --noEmit
 npm run lint
 npm run test
-npm run format
+npm run build
+npm run start
 ```
 
-Se algum script ainda não existir, criar quando a necessidade aparecer.
+O build pode consultar o PostgreSQL ao gerar páginas. Ele precisa de conexão válida e dados disponíveis, mesmo que os testes unitários passem sem banco.
 
-Há também um `justfile` com atalhos de setup e deploy (`just setup`,
-`just check`, `just docker-build`, `just deploy` etc.) — rode `just` sem
-argumentos para ver a lista completa. Ver comentários no próprio arquivo
-para os pré-requisitos de deploy (Docker, SSH no VPS).
+## Docker e demonstração
 
-## Banco de dados
+O [justfile](justfile) oferece `just setup`, `just check`, `just docker-build` e `just deploy`. O build Docker usa BuildKit e recebe `.env` como secret; o deploy foi configurado para execução no próprio servidor, com rede do host e porta `3067`. Revise esses parâmetros para seu ambiente antes de usá-los.
 
-A conexão com PostgreSQL deve ficar centralizada em:
+Para gerar o vídeo de apresentação, consulte [scripts/demo-video/README.md](scripts/demo-video/README.md). O comando disponível é `npm run demo:video`.
 
-```txt
-lib/db/
-```
+## Desenvolvimento e interpretação
 
-Consultas SQL devem ficar em:
+Consulte [reference/design-system.md](reference/design-system.md), [reference/paginas.md](reference/paginas.md) e [notes/backlog.md](notes/backlog.md) antes de alterar a interface. As páginas de documentação e os models dbt descrevem metodologia e limitações dos indicadores.
 
-```txt
-lib/queries/
-```
+Apresente dados agregados e preserve a referência temporal de cada fonte. Não versione arquivos de ambiente, credenciais ou dumps.
 
-Componentes React não devem abrir conexão direta com o banco.
+## Projetos relacionados
 
-Fluxo recomendado:
+Este repositório faz parte do **Raio-X Municipal**, iniciativa independente de integração e análise de dados públicos de saúde. Os demais componentes são:
 
-```txt
-PostgreSQL/dbt
-  ↓
-lib/db
-  ↓
-lib/queries
-  ↓
-Server Component / Server Action / Route Handler
-  ↓
-Componentes visuais
-```
+| Repositório | Papel no ecossistema |
+|---|---|
+| [raio-x-engenharia](https://github.com/Moscarde/raio-x-engenharia) | Coleta de fontes públicas, orquestração com Airflow e modelagem analítica com dbt. |
+| [raio-x-database](https://github.com/Moscarde/raio-x-database) | Infraestrutura PostgreSQL, persistência, roles e rotinas de backup e restauração (repositório privado). |
+| [raio-x-dash-evidence-dev](https://github.com/Moscarde/raio-x-dash-evidence-dev) | Protótipo anterior de apresentação analítica com Evidence.dev, Markdown e SQL. |
+| [raio-x-lake](https://github.com/Moscarde/raio-x-lake) | Infraestrutura MinIO para object storage; a integração com o pipeline atual não está implementada. |
 
-## Convenções principais
-
-### Páginas
-
-Rotas e páginas ficam em:
-
-```txt
-app/
-```
-
-Use Server Components por padrão.
-
-Use Client Components apenas quando houver interatividade real, como filtros no navegador, gráficos interativos, dropdowns ou controle local de estado.
-
-### Componentes
-
-Componentes visuais ficam em:
-
-```txt
-components/
-```
-
-Exemplos:
-
-```txt
-components/layout/app-sidebar.tsx
-components/layout/dashboard-header.tsx
-components/cards/kpi-card.tsx
-components/charts/producao-mensal-chart.tsx
-components/alerts/alert-list.tsx
-components/tables/indicadores-aps-table.tsx
-```
-
-### Tipos
-
-Tipos compartilhados ficam em:
-
-```txt
-types/
-```
-
-Tipos específicos de um componente podem ficar no próprio arquivo.
-
-### Formatadores
-
-Formatadores devem ficar em:
-
-```txt
-lib/formatters/
-```
-
-Exemplos:
-
-```txt
-number-format.ts
-percent-format.ts
-date-format.ts
-competencia-format.ts
-```
-
-Evite espalhar formatação manual pela interface.
-
-## shadcn/ui
-
-Componentes base do shadcn/ui ficam em:
-
-```txt
-components/ui/
-```
-
-Evite editar esses componentes diretamente sem necessidade.
-
-Para variações específicas do produto, crie wrappers em outras pastas.
-
-Exemplo:
-
-```txt
-components/cards/kpi-card.tsx
-```
-
-## Gráficos
-
-Usar Recharts para gráficos.
-
-Componentes de gráfico devem ficar em:
-
-```txt
-components/charts/
-```
-
-Os dados devem chegar ao componente já prontos para renderização.
-
-Evite transformação pesada dentro do gráfico.
-
-## Segurança
-
-Este projeto pode lidar com dados de saúde pública.
-
-Regras:
-
-* não expor dados pessoais identificáveis;
-* não exibir CPF, CNS, endereço, telefone, nome de paciente ou dado individual sensível;
-* preferir dados agregados;
-* não versionar credenciais;
-* não versionar dumps de dados;
-* não logar dados sensíveis;
-* não expor connection string ao navegador.
-
-## Desenvolvimento com IA
-
-O arquivo principal de orientação para IA é:
-
-```txt
-CLAUDE.md
-```
-
-Antes de pedir grandes alterações para uma IA, garanta que ela leia:
-
-```txt
-CLAUDE.md
-reference/
-```
-
-Para mudanças envolvendo dados, a IA também pode consultar o projeto principal:
-
-```txt
-/home/moscarde/raio-x-engenharia
-```
-
-## Backlog
-
-Ideias futuras e pendências devem ficar em:
-
-```txt
-notes/backlog.md
-```
-
-Não criar arquivos soltos de rascunho fora dessa pasta.
-
-## Critérios básicos de entrega
-
-Uma nova tela ou componente deve:
-
-* renderizar sem erro;
-* seguir a referência visual;
-* estar tipado;
-* não expor dado sensível;
-* tratar estado vazio quando aplicável;
-* manter queries isoladas da UI;
-* manter componentes pequenos;
-* evitar duplicação;
-* usar dados da camada analítica correta.
-
-## Licença
-
-Definir conforme objetivo do projeto.
-
-Para portfólio privado, manter sem licença pública ou adicionar aviso de uso interno.
+O fluxo implementado é fontes públicas → collectors/Airflow → PostgreSQL raw → dbt → marts PostgreSQL → apresentação. O MinIO é uma infraestrutura separada e não é requisito para executar o pipeline atual.
